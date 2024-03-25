@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.*;
@@ -12,12 +13,16 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
 
+import java.awt.*;
 import java.io.*;
+import java.lang.StringBuilder;
 import java.nio.ByteBuffer;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+
+import static java.awt.Font.TRUETYPE_FONT;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
@@ -66,9 +71,22 @@ public class Main extends ApplicationAdapter {
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
         String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1, fontFileName.lastIndexOf('.'));
+        System.out.println("Building character map...");
+        StringBuilder sb = new StringBuilder(1024);
+        try {
+            java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(args[0]));
+            for (int i = 32; i < 65536; i++) {
+                if(af.canDisplay(i)) sb.append(i).append(' ');
+            }
+            if(sb.length() > 0) sb.deleteCharAt(sb.length() - 1);
+        } catch (FontFormatException | IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        Gdx.files.local(fontFileName + ".cmap.txt").writeString(sb.toString(), false, "UTF-8");
 
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
-        String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset distbin/chars.txt" +
+        String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset " + fontFileName + ".cmap.txt" +
                 " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
                 "-pxrange 8 -dimensions 2048 2048 -size " + args[2];
         ProcessBuilder builder =
