@@ -3,13 +3,17 @@ package com.github.tommyettinger;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.PixmapIO;
-import com.badlogic.gdx.utils.ByteArray;
-import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.utils.StreamUtils;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.github.tommyettinger.textra.Font;
+import com.github.tommyettinger.textra.Layout;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Deflater;
@@ -32,6 +36,21 @@ public class Main extends ApplicationAdapter {
     private int lastLineLen;
     private final String[] args;
 
+    private SpriteBatch batch;
+    private Viewport viewport;
+    private Layout layout = new Layout().setTargetWidth(1200);
+    private static final String text = "Fonts can be rendered normally,{CURLY BRACKETS ARE IGNORED} but using [[tags], you can..."
+            + "\n[#E74200]...use CSS-style hex colors like [*]#E74200[*]..."
+            + "\n[darker purple blue]...use color names or descriptions, like [/]darker purple blue[/]...[ ]"
+            + "\n[_]...and use [!]effects[!][_]!"
+            + "\nNormal, [*]bold[*], [/]oblique[/] (like italic), [*][/]bold oblique[ ],"
+            + "\n[_]underline (even for multiple words)[_], [~]strikethrough (same)[ ],"
+            + "\nscaling: [%50]very [%75]small [%100]to [%150]quite [%200]large[ ], notes: [.]sub-[.], [=]mid-[=], and [^]super-[^]script,"
+            + "\ncapitalization changes: [;]Each cap, [,]All lower, [!]Caps lock[ ],"
+            + "\n[%^small caps][*]Special[*][%] [%^whiten][/]Effects[/][%]: [%?shadow]drop shadow[%], [%?jostle]RaNsoM nOtE[%], [%?error]spell check[%]..."
+            + "\nWelcome to the [_][*][TEAL]Textra Zone[ ]!";
+
+
     public Main(String[] args) {
         if(args == null || args.length == 0) {
             System.out.println("This tool needs some parameters!");
@@ -42,6 +61,8 @@ public class Main extends ApplicationAdapter {
     }
     @Override
     public void create() {
+        batch = new SpriteBatch();
+        viewport = new StretchViewport(1200, 675);
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
         String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1, fontFileName.lastIndexOf('.'));
@@ -80,6 +101,50 @@ public class Main extends ApplicationAdapter {
             e.printStackTrace();
             System.exit(1);
         }
+
+        System.out.println("Creating a preview...");
+        Font font = new Font("fonts/"+fontName+"-"+args[1]+".json",
+                new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
+        font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
+        font.scaleTo(font.originalCellWidth*36f/font.originalCellHeight, 36f/font.originalCellHeight);
+
+        layout.setBaseColor(Color.DARK_GRAY);
+        layout.setMaxLines(20);
+        layout.setEllipsis(" and so on and so forth...");
+//            font.markup("[%300][#44DD22]digital[%]\n[#66EE55]just numeric things \n"
+//                    , layout);
+        font.markup(text, layout);
+
+        ScreenUtils.clear(0.75f, 0.75f, 0.75f, 1f);
+        float x = Gdx.graphics.getBackBufferWidth() * 0.5f;
+        float y = (Gdx.graphics.getBackBufferHeight() + layout.getHeight()) * 0.5f - font.descent * font.scaleY;
+        batch.begin();
+        font.enableShader(batch);
+        font.drawGlyphs(batch, layout, x, y, Align.center);
+        batch.end();
+
+        // Modified Pixmap.createFromFrameBuffer() code that uses RGB instead of RGBA
+        Gdx.gl.glPixelStorei(GL20.GL_PACK_ALIGNMENT, 1);
+        final Pixmap pm = new Pixmap(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), Pixmap.Format.RGB888);
+        ByteBuffer pixels = pm.getPixels();
+        Gdx.gl.glReadPixels(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), GL20.GL_RGB, GL20.GL_UNSIGNED_BYTE, pixels);
+        // End Pixmap.createFromFrameBuffer() modified code
+
+        PixmapIO.writePNG(Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png"), pm, 0, true);
+
+        builder.command(("distbin/oxipng -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
+        try {
+            int exitCode = builder.start().waitFor();
+            if(exitCode != 0) {
+                System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
+                System.exit(exitCode);
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+
         Gdx.app.exit();
     }
 

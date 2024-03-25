@@ -29,7 +29,7 @@ allprojects {
 
 configure(subprojects) {
   apply plugin: 'java-library'
-  sourceCompatibility = 11
+  sourceCompatibility = JavaVersion.VERSION_1_8
   compileJava {
     options.incremental = true
   }
@@ -53,7 +53,10 @@ configure(subprojects) {
 
   java {
     toolchain {
-      languageVersion = JavaLanguageVersion.of(11)
+      if(enableGraalNative == 'true')
+        languageVersion = JavaLanguageVersion.of(11)
+      else
+        languageVersion = JavaLanguageVersion.of(8)
     }
   }
 }
