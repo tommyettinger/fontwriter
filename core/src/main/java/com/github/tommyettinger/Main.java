@@ -129,8 +129,12 @@ public class Main extends ApplicationAdapter {
         Font font = new Font("fonts/"+fontName+"-"+args[1]+".json",
                 new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
         font.setTextureFilter();
-        font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
         font.scaleTo(font.originalCellWidth*36f/font.originalCellHeight, 36f);
+//        if(font.getDistanceField() == Font.DistanceFieldType.MSDF)
+//            font.distanceFieldCrispness = -8f / (float)Math.log(1f/font.originalCellHeight);
+//        else if(font.getDistanceField() == Font.DistanceFieldType.SDF)
+//            font.distanceFieldCrispness = -1.2f / (float)Math.log(1f/font.originalCellHeight);
+        font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
         layout.setBaseColor(Color.DARK_GRAY);
         layout.setMaxLines(20);
