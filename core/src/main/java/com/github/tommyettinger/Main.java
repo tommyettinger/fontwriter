@@ -17,6 +17,7 @@ import java.awt.*;
 import java.io.*;
 import java.lang.StringBuilder;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Deflater;
@@ -77,8 +78,10 @@ public class Main extends ApplicationAdapter {
             StringBuilder sb = new StringBuilder(1024);
             try {
                 java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(args[0]));
+                int[] weirdChars = {0x200C, 0x200D, 0x200E, 0x200F, 0x2028, 0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x206A, 0x206B, 0x206C, 0x206D, 0x206E, 0x206F};
                 for (int i = 32; i < 65536; i++) {
-                    if (af.canDisplay(i)) sb.append(i).append(' ');
+                    if(Arrays.binarySearch(weirdChars, i) < 0 && af.canDisplay(i))
+                        sb.append(i).append(' ');
                 }
                 if (sb.length() > 0) sb.deleteCharAt(sb.length() - 1);
             } catch (FontFormatException | IOException e) {
