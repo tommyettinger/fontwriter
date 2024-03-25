@@ -68,13 +68,13 @@ public class Main extends ApplicationAdapter {
         String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1, fontFileName.lastIndexOf('.'));
 
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
-        String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -allglyphs" +
+        String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset distbin/chars.txt" +
                 " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
                 "-pxrange 8 -dimensions 2048 2048 -size " + args[2];
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
         builder.directory(new File(Gdx.files.getLocalStoragePath()));
-        builder.inheritIO();
+        builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
