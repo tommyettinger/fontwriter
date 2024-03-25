@@ -71,28 +71,30 @@ public class Main extends ApplicationAdapter {
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
         String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1, fontFileName.lastIndexOf('.'));
-        System.out.println("Building character map...");
-        StringBuilder sb = new StringBuilder(1024);
-        try {
-            java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(args[0]));
-            for (int i = 32; i < 65536; i++) {
-                if(af.canDisplay(i)) sb.append(i).append(' ');
+        FileHandle cmap = Gdx.files.local(fontFileName + ".cmap.txt");
+        if(!cmap.exists()) {
+            System.out.println("Building character map...");
+            StringBuilder sb = new StringBuilder(1024);
+            try {
+                java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(args[0]));
+                for (int i = 32; i < 65536; i++) {
+                    if (af.canDisplay(i)) sb.append(i).append(' ');
+                }
+                if (sb.length() > 0) sb.deleteCharAt(sb.length() - 1);
+            } catch (FontFormatException | IOException e) {
+                e.printStackTrace();
+                System.exit(1);
             }
-            if(sb.length() > 0) sb.deleteCharAt(sb.length() - 1);
-        } catch (FontFormatException | IOException e) {
-            e.printStackTrace();
-            System.exit(1);
+            cmap.writeString(sb.toString(), false, "UTF-8");
         }
-        Gdx.files.local(fontFileName + ".cmap.txt").writeString(sb.toString(), false, "UTF-8");
-
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
-        String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset " + fontFileName + ".cmap.txt" +
+        String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                 " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
                 "-pxrange 8 -dimensions 2048 2048 -size " + args[2];
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
         builder.directory(new File(Gdx.files.getLocalStoragePath()));
-        builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        builder.inheritIO();
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
@@ -123,6 +125,7 @@ public class Main extends ApplicationAdapter {
         System.out.println("Creating a preview...");
         Font font = new Font("fonts/"+fontName+"-"+args[1]+".json",
                 new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
+        font.setTextureFilter();
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
         font.scaleTo(font.originalCellWidth*36f/font.originalCellHeight, 36f);
 
