@@ -16,7 +16,7 @@ public class Lwjgl3Launcher {
         configuration.disableAudio(true);
         configuration.setTitle("FontWriter");
         configuration.useVsync(true);
-        configuration.setWindowedMode(640, 480);
+        configuration.setWindowedMode(1200, 675);
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
         return configuration;
     }

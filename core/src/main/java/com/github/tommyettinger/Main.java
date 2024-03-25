@@ -124,7 +124,7 @@ public class Main extends ApplicationAdapter {
         Font font = new Font("fonts/"+fontName+"-"+args[1]+".json",
                 new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
-        font.scaleTo(font.originalCellWidth*36f/font.originalCellHeight, 36f/font.originalCellHeight);
+        font.scaleTo(font.originalCellWidth*36f/font.originalCellHeight, 36f);
 
         layout.setBaseColor(Color.DARK_GRAY);
         layout.setMaxLines(20);
