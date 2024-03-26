@@ -13,11 +13,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
 
-import java.awt.*;
+import java.awt.FontFormatException;
 import java.io.*;
 import java.lang.StringBuilder;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Deflater;
@@ -90,23 +91,35 @@ public class Main extends ApplicationAdapter {
             }
             cmap.writeString(sb.toString(), false, "UTF-8");
         }
+        long size = Math.round(Double.parseDouble(args[2]));
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
         String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                 " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
-                "-pxrange 8 -dimensions 2048 2048 -size " + args[2];
+                "-pxrange 8 -dimensions 2048 2048 -size " + size;
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
+        List<String> commandList = builder.command();
         builder.directory(new File(Gdx.files.getLocalStoragePath()));
         builder.inheritIO();
-        try {
-            int exitCode = builder.start().waitFor();
-            if(exitCode != 0) {
-                System.out.println("msdf-atlas-gen failed, returning exit code " + exitCode + "; terminating.");
-                System.exit(exitCode);
+        while (true) {
+            try {
+                commandList.set(commandList.size()-1, String.valueOf(size));
+                int exitCode = builder.command(commandList).start().waitFor();
+                if (exitCode != 0) {
+                    if (--size <= 0) {
+                        System.out.println("msdf-atlas-gen failed, returning exit code " + exitCode + "; terminating.");
+                        System.exit(exitCode);
+                        break;
+                    }
+                } else {
+                    System.out.println("Using size " + size + ".");
+                    break;
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+                System.exit(1);
+                break;
             }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            System.exit(1);
         }
 
         System.out.println("Applying changes for improved TextraTypist usage...");
@@ -130,10 +143,6 @@ public class Main extends ApplicationAdapter {
                 new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
         font.setTextureFilter();
         font.scaleTo(font.originalCellWidth*36f/font.originalCellHeight, 36f);
-//        if(font.getDistanceField() == Font.DistanceFieldType.MSDF)
-//            font.distanceFieldCrispness = -8f / (float)Math.log(1f/font.originalCellHeight);
-//        else if(font.getDistanceField() == Font.DistanceFieldType.SDF)
-//            font.distanceFieldCrispness = -1.2f / (float)Math.log(1f/font.originalCellHeight);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
         layout.setBaseColor(Color.DARK_GRAY);
