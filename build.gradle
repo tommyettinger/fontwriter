@@ -30,6 +30,9 @@ allprojects {
 configure(subprojects) {
   apply plugin: 'java-library'
   sourceCompatibility = JavaVersion.VERSION_1_8
+  if(JavaVersion.current().isJava9Compatible()){
+    compileJava.options.release.set(8);
+  }
   compileJava {
     options.incremental = true
   }
@@ -50,19 +53,10 @@ configure(subprojects) {
       assetsFile.append(it + "\n")
     }
   }
-
-  java {
-    toolchain {
-      if(enableGraalNative == 'true')
-        languageVersion = JavaLanguageVersion.of(11)
-      else
-        languageVersion = JavaLanguageVersion.of(8)
-    }
-  }
 }
 
 subprojects {
-  version = '1.0.0'
+  version = '1.0.1'
   ext.appName = 'fontwriter'
   repositories {
     mavenCentral()

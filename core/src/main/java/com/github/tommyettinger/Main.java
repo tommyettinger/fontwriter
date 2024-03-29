@@ -148,8 +148,6 @@ public class Main extends ApplicationAdapter {
         layout.setBaseColor(Color.DARK_GRAY);
         layout.setMaxLines(20);
         layout.setEllipsis(" and so on and so forth...");
-//            font.markup("[%300][#44DD22]digital[%]\n[#66EE55]just numeric things \n"
-//                    , layout);
         font.markup(text, layout);
 
         ScreenUtils.clear(0.75f, 0.75f, 0.75f, 1f);

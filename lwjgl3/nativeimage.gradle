@@ -17,6 +17,8 @@ project(":lwjgl3") {
       }
     }
   }
+  java.sourceCompatibility = JavaVersion.VERSION_11
+  java.targetCompatibility = JavaVersion.VERSION_11
 
   run {
     doNotTrackState("Running the app should not be affected by Graal.")
@@ -59,4 +61,6 @@ project(":core") {
   dependencies {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
   }
+  java.sourceCompatibility = JavaVersion.VERSION_11
+  java.targetCompatibility = JavaVersion.VERSION_11
 }
