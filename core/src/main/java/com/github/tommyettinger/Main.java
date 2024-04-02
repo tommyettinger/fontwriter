@@ -10,8 +10,11 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.github.tommyettinger.textra.ColorLookup;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
+import com.github.tommyettinger.textra.utils.ColorUtils;
+import com.github.tommyettinger.textra.utils.StringUtils;
 
 import java.awt.FontFormatException;
 import java.io.*;
@@ -60,7 +63,21 @@ public class Main extends ApplicationAdapter {
 
     public Main(String[] args) {
         if(args == null || args.length == 0) {
-            System.out.println("This tool needs some parameters!");
+            System.out.println("You must pass at least the following parameters:");
+            System.out.println(" - the path to a font file (it can be TTF or OTF),");
+            System.out.println(" - the mode to use ('msdf', 'sdf', 'mtsdf', 'psdf', or 'standard'),");
+            System.out.println(" - the initial size to try (as an int or double)");
+            System.out.println("Optionally, you can pass the following parameters after those:");
+            System.out.println(" - the image size (it defaults to 2048x2048, and must be separated by 'x')");
+            System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
+            System.out.println();
+            System.out.println("For example, you could use this full command:");
+            System.out.println("java -jar fontwriter-1.0.1.jar Gentium.ttf standard 63");
+            System.out.println("or this one:");
+            System.out.println("java -jar fontwriter-1.0.1.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println();
+            System.out.println("Both will write the complete contents of the font, at different font sizes, and");
+            System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
             System.exit(1);
         }
         this.args = args;
@@ -92,10 +109,17 @@ public class Main extends ApplicationAdapter {
             cmap.writeString(sb.toString(), false, "UTF-8");
         }
         long size = Math.round(Double.parseDouble(args[2]));
+        String imageSize = args.length > 3 ? args[3].replace('x', ' ') : "2048 2048";
+        boolean fullPreview = args.length > 4;
+        int fullPreviewColor;
+        if(fullPreview)
+            fullPreviewColor = stringToColor(args[4].replaceAll("['\"]", ""));
+        else
+            fullPreviewColor = -1;
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
         String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                 " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
-                "-pxrange 8 -dimensions 2048 2048 -size " + size;
+                "-pxrange 8 -dimensions " + imageSize + " -size " + size;
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
         List<String> commandList = builder.command();
@@ -123,7 +147,14 @@ public class Main extends ApplicationAdapter {
         }
 
         System.out.println("Applying changes for improved TextraTypist usage...");
-        process(Gdx.files.local("fonts/"+fontName+"-"+args[1]+".png"));
+        FileHandle imageFile = Gdx.files.local("fonts/"+fontName+"-"+args[1]+".png");
+        if(fullPreview)
+        {
+            FileHandle fullPreviewFile = Gdx.files.local("previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png");
+            imageFile.copyTo(fullPreviewFile);
+            process(fullPreviewFile, fullPreviewColor);
+        }
+        process(imageFile);
 
         System.out.println("Optimizing result with oxipng...");
         builder.command(("distbin/oxipng -o 6 -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
@@ -137,7 +168,20 @@ public class Main extends ApplicationAdapter {
             e.printStackTrace();
             System.exit(1);
         }
+        if (fullPreview) {
+            builder.command(("distbin/oxipng -o 6 -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
+            try {
+                int exitCode = builder.start().waitFor();
+                if(exitCode != 0) {
+                    System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
+                    System.exit(exitCode);
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
 
+        }
         System.out.println("Creating a preview...");
         Font font = new Font("fonts/"+fontName+"-"+args[1]+".json",
                 new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
@@ -183,7 +227,48 @@ public class Main extends ApplicationAdapter {
         Gdx.app.exit();
     }
 
+    private int stringToColor(String str) {
+        if (str != null) {
+            // Try to parse named color
+            ColorLookup lookup = ColorLookup.DESCRIPTIVE;
+            int namedColor = lookup.getRgba(str);
+            if (namedColor != 256) {
+                return namedColor;
+            }
+            // Try to parse hex
+            if (str.length() >= 3) {
+                if (str.startsWith("#")) {
+                    if (str.length() >= 9) return StringUtils.intFromHex(str, 1, 9);
+                    if (str.length() >= 7) return StringUtils.intFromHex(str, 1, 7) << 8 | 0xFF;
+                    if (str.length() >= 4) {
+                        int rgb = StringUtils.intFromHex(str, 1, 4);
+                        return
+                                (rgb << 20 & 0xF0000000) | (rgb << 16 & 0x0F000000) |
+                                        (rgb << 16 & 0x00F00000) | (rgb << 12 & 0x000F0000) |
+                                        (rgb << 12 & 0x0000F000) | (rgb <<  8 & 0x00000F00) |
+                                        0xFF;
+                    }
+                } else {
+                    if (str.length() >= 8) return StringUtils.intFromHex(str, 0, 8);
+                    if (str.length() >= 6) return StringUtils.intFromHex(str, 0, 6) << 8 | 0xFF;
+                    int rgb = StringUtils.intFromHex(str, 0, 3);
+                    return
+                            (rgb << 20 & 0xF0000000) | (rgb << 16 & 0x0F000000) |
+                                    (rgb << 16 & 0x00F00000) | (rgb << 12 & 0x000F0000) |
+                                    (rgb << 12 & 0x0000F000) | (rgb <<  8 & 0x00000F00) |
+                                    0xFF;
+                }
+            }
+        }
+
+        return -1; // white
+
+    }
+
     private void process (FileHandle file) {
+        process(file, -1);
+    }
+    private void process (FileHandle file, int rgba) {
         if(!file.exists()) {
             System.out.println("The specified file " + file + " does not exist; skipping.");
             return;
@@ -225,9 +310,9 @@ public class Main extends ApplicationAdapter {
 
                 buffer.writeInt(PLTE);
                 for (int i = 0; i < 256; i++) {
-                    buffer.write(255);
-                    buffer.write(255);
-                    buffer.write(255);
+                    buffer.write(rgba >>> 24);
+                    buffer.write(rgba >>> 16 & 255);
+                    buffer.write(rgba >>>  8 & 255);
                 }
                 buffer.endChunk(dataOutput);
 
