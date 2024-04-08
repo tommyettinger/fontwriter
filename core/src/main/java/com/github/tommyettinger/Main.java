@@ -119,7 +119,8 @@ public class Main extends ApplicationAdapter {
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
         String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                 " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
-                "-pxrange " + Math.pow(Math.log(size) * 0.31, 4.8) + " -dimensions " + imageSize + " -size " + size;
+                "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.4 + 1.0))
+                + " -dimensions " + imageSize + " -size " + size;
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
         List<String> commandList = builder.command();
@@ -128,7 +129,7 @@ public class Main extends ApplicationAdapter {
         while (true) {
             try {
                 commandList.set(commandList.size()-1, String.valueOf(size));
-                commandList.set(commandList.size()-6, String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)));
+                commandList.set(commandList.size()-6, "sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.4 + 1.0));
                 builder.command(commandList);
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
