@@ -55,6 +55,28 @@ project(":lwjgl3") {
 }"""
     )
   }
+  tasks.register("nativeDist") {
+    dependsOn(nativeCompile)
+    doLast {
+      copy {
+        mkdir 'build/dist'
+        from 'build/native/nativeCompile'
+        into 'build/dist'
+        include '*.exe'
+        include '*.dll'
+      }
+      // fixes an AWT-related issue on Graal Native Image
+      copy {
+        mkdir 'build/dist/lib'
+        from System.properties['java.home'] + '/lib'
+        into 'build/dist/lib'
+        include 'fontconfig.bfc'
+        include 'fontconfig.properties.src'
+        include 'psfont.properties.ja'
+        include 'psfontj2d.properties'
+      }
+    }
+  }
 }
 
 project(":core") {
