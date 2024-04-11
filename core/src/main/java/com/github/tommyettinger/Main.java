@@ -72,9 +72,9 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-1.0.1.jar Gentium.ttf standard 63");
+            System.out.println("java -jar fontwriter-1.0.2.jar Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-1.0.1.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar fontwriter-1.0.2.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");

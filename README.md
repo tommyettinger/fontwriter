@@ -26,10 +26,10 @@ For now, this is Windows-only. I would need to build some tools for other platfo
 on Linux or macOS.
 
 If you have the JAR from the releases, unzip it so the other files it came with are all in the same folder
-structure. Then, you can enter the directory with that holds `fontwriter-1.0.1.jar` and run
-`java -jar fontwriter-1.0.1.jar "MyFont.ttf" msdf 60` , where "MyFont.ttf" can be any path to a .ttf file
+structure. Then, you can enter the directory with that holds `fontwriter-1.0.2.jar` and run
+`java -jar fontwriter-1.0.2.jar "MyFont.ttf" msdf 60` , where "MyFont.ttf" can be any path to a .ttf file
 or probably also an .otf file. "MyFont.ttf" doesn't have to be in the same folder if you give it an absolute
-path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-1.0.0.jar ` to enter its
+path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-1.0.2.jar ` to enter its
 absolute path). The second parameter, `msdf`, can also be `sdf` or `standard`. You might just want `standard`
 for many reasons; even though it won't scale up nicely, it will scale down fairly well, and you can
 interchange `standard` fonts using FontFamily or using colorful emoji. On the other hand is `msdf`, which
