@@ -117,7 +117,7 @@ public class Main extends ApplicationAdapter {
         else
             fullPreviewColor = -1;
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
-        String cmd = "distbin/msdf-atlas-gen -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
+        String cmd = "distbin/msdf-atlas-gen.exe -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                 " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
                 "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0))
                 + " -dimensions " + imageSize + " -size " + size;
@@ -160,7 +160,7 @@ public class Main extends ApplicationAdapter {
         process(imageFile);
 
         System.out.println("Optimizing result with oxipng...");
-        builder.command(("distbin/oxipng -o 6 -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
+        builder.command(("distbin/oxipng.exe -o 6 -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
@@ -172,7 +172,7 @@ public class Main extends ApplicationAdapter {
             System.exit(1);
         }
         if (fullPreview) {
-            builder.command(("distbin/oxipng -o 6 -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
+            builder.command(("distbin/oxipng.exe -o 6 -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
             try {
                 int exitCode = builder.start().waitFor();
                 if(exitCode != 0) {
@@ -214,7 +214,7 @@ public class Main extends ApplicationAdapter {
 
         PixmapIO.writePNG(Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png"), pm, 0, true);
 
-        builder.command(("distbin/oxipng -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
+        builder.command(("distbin/oxipng.exe -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
