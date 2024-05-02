@@ -44,7 +44,7 @@ public class Main extends ApplicationAdapter {
     private ByteArray curLineBytes;
     private ByteArray prevLineBytes;
     private int lastLineLen;
-    private final String[] args;
+    private String[] args;
 
     private SpriteBatch batch;
     private Viewport viewport;
@@ -62,7 +62,7 @@ public class Main extends ApplicationAdapter {
 
 
     public Main(String[] args) {
-        if(args == null || args.length == 0) {
+        if(args == null || args.length == 0 || "-h".equals(args[0]) || "--help".equals(args[0])) {
             System.out.println("You must pass at least the following parameters:");
             System.out.println(" - the path to a font file (it can be TTF or OTF),");
             System.out.println(" - the mode to use ('msdf', 'sdf', 'mtsdf', 'psdf', or 'standard'),");
@@ -72,9 +72,9 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-1.0.2.jar Gentium.ttf standard 63");
+            System.out.println("java -jar fontwriter-1.0.3.jar Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-1.0.2.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar fontwriter-1.0.3.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
@@ -89,6 +89,31 @@ public class Main extends ApplicationAdapter {
         viewport = new StretchViewport(1200, 675);
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
+
+        if("--bulk".equals(args[0])){
+            String inPath = "input";
+            if(args.length > 1){
+                inPath = args[1];
+            }
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                    (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
+            String[] fields = {"standard", "sdf", "msdf"};
+            args = new String[]{"filename", "field", "300"};
+            for(FileHandle file : files){
+                args[0] = file.path();
+                for(String field : fields) {
+                    args[1] = field;
+                    mainProcess();
+                }
+            }
+        } else {
+            mainProcess();
+        }
+
+        Gdx.app.exit();
+    }
+
+    public void mainProcess() {
         String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1, fontFileName.lastIndexOf('.'));
         FileHandle cmap = Gdx.files.local(fontFileName + ".cmap.txt");
         if(!cmap.exists()) {
@@ -118,9 +143,9 @@ public class Main extends ApplicationAdapter {
             fullPreviewColor = -1;
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
         String cmd = "distbin/msdf-atlas-gen.exe -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
-                " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
-                "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0))
-                + " -dimensions " + imageSize + " -size " + size;
+                     " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
+                     "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0))
+                     + " -dimensions " + imageSize + " -size " + size;
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
         List<String> commandList = builder.command();
@@ -225,9 +250,6 @@ public class Main extends ApplicationAdapter {
             e.printStackTrace();
             System.exit(1);
         }
-
-
-        Gdx.app.exit();
     }
 
     private int stringToColor(String str) {
