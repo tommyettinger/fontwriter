@@ -97,10 +97,19 @@ public class Main extends ApplicationAdapter {
             }
             FileHandle[] files = Gdx.files.local(inPath).list(
                     (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
-            String[] fields = {"standard", "sdf", "msdf"};
-            args = new String[]{"filename", "field", "300"};
+//            String[] fields = {"standard", "sdf", "msdf"};
+            String[] fields = {"sdf"};
+            args = new String[]{"filename", "field", "300", "2048x2048"};
             for(FileHandle file : files){
                 args[0] = file.path();
+                if(file.name().startsWith("Go-Noto")) {
+                    args[2] = "30";
+                    args[3] = "4096x4096";
+                }
+                else {
+                    args[2] = "300";
+                    args[3] = "2048x2048";
+                }
                 for(String field : fields) {
                     args[1] = field;
                     mainProcess();
@@ -215,7 +224,9 @@ public class Main extends ApplicationAdapter {
                 new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
         font.setTextureFilter();
         float newHeight = 11f * (font.originalCellHeight / font.mapping.get(' ').xAdvance);
-        font.setCrispness(55f / newHeight);
+        if(args[1].startsWith("m"))
+            font.setCrispness(55f / newHeight); // msdf or mtsdf
+//        System.out.println("Using crispness " + font.getCrispness());
         font.scaleTo(font.originalCellWidth*newHeight/font.originalCellHeight, newHeight);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
