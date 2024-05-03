@@ -214,7 +214,9 @@ public class Main extends ApplicationAdapter {
         Font font = new Font("fonts/"+fontName+"-"+args[1]+".json",
                 new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
         font.setTextureFilter();
-        font.scaleTo(font.originalCellWidth*36f/font.originalCellHeight, 36f);
+        float newHeight = 11f * (font.originalCellHeight / font.mapping.get(' ').xAdvance);
+        font.setCrispness(55f / newHeight);
+        font.scaleTo(font.originalCellWidth*newHeight/font.originalCellHeight, newHeight);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
         layout.setBaseColor(Color.DARK_GRAY);
