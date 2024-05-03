@@ -96,8 +96,8 @@ public class Main extends ApplicationAdapter {
             }
             FileHandle[] files = Gdx.files.local(inPath).list(
                     (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
-//            String[] fields = {"standard", "sdf", "msdf"};
-            String[] fields = {"sdf"};
+            String[] fields = {"standard", "sdf", "msdf"};
+//            String[] fields = {"sdf"};
             args = new String[]{"filename", "field", "300", "2048x2048"};
             for(FileHandle file : files){
                 args[0] = file.path();
