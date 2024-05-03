@@ -13,7 +13,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.tommyettinger.textra.ColorLookup;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
-import com.github.tommyettinger.textra.utils.ColorUtils;
 import com.github.tommyettinger.textra.utils.StringUtils;
 
 import java.awt.FontFormatException;
