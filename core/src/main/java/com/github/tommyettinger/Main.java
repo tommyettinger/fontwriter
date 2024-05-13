@@ -57,7 +57,7 @@ public class Main extends ApplicationAdapter {
             + "\nscaling: [%50]very [%75]small [%100]to [%150]quite [%200]large[ ], notes: [.]sub-[.], [=]mid-[=], and [^]super-[^]script,"
             + "\ncapitalization changes: [;]Each cap, [,]All lower, [!]Caps lock[ ],"
             + "\n[%^small caps][*]Special[*][%] [%^whiten][/]Effects[/][%]: [%?shadow]drop shadow[%], [%?jostle]RaNsoM nOtE[%], [%?error]spell check[%]..."
-            + "\nWelcome to the [_][*][TEAL]Textra Zone[ ]!";
+            + "\nWelcome to the [_][*][TEAL]Structured JSON Zone[ ]!";
 
 
     public Main(String[] args) {
@@ -153,7 +153,7 @@ public class Main extends ApplicationAdapter {
         String cmd = "distbin/msdf-atlas-gen.exe -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                      " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
                      "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0))
-                     + " -dimensions " + imageSize + " -size " + size;
+                     + " -dimensions " + imageSize + " -size " + size + " -outerpxpadding 1";
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
         List<String> commandList = builder.command();
@@ -161,8 +161,8 @@ public class Main extends ApplicationAdapter {
         builder.inheritIO();
         while (true) {
             try {
-                commandList.set(commandList.size()-1, String.valueOf(size));
-                commandList.set(commandList.size()-6, "sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0));
+                commandList.set(commandList.size()-3, String.valueOf(size));
+                commandList.set(commandList.size()-8, "sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0));
                 builder.command(commandList);
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
