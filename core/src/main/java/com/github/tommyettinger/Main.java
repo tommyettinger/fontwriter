@@ -303,23 +303,26 @@ public class Main extends ApplicationAdapter {
     }
 
     private void process (FileHandle file) {
-        process(file, -1);
+        process(file, 256);
     }
     private void process (FileHandle file, int rgba) {
-        if(!file.exists()) {
+        if (!file.exists()) {
             System.out.println("The specified file " + file + " does not exist; skipping.");
             return;
         }
         Pixmap pm = new Pixmap(file);
 
         final int w = pm.getWidth(), h = pm.getHeight();
-        for (int x = w - 3; x < w; x++) {
-            for (int y = h - 3; y < h; y++) {
-                int color = pm.getPixel(x, y);
-                if (!((color & 0xFF) == 0 || (color >>> 8) == 0)) {
-                    throw new GdxRuntimeException("Had a transparency problem with " + file.name());
+        if (rgba == 256) {
+            for (int x = w - 3; x < w; x++) {
+                for (int y = h - 3; y < h; y++) {
+                    int color = pm.getPixel(x, y);
+                    if (!((color & 0xFF) == 0 || (color >>> 8) == 0)) {
+                        throw new GdxRuntimeException("Had a transparency problem with " + file.name());
+                    }
                 }
             }
+            rgba = -1;
         }
         pm.setColor(-1);
         pm.fillRectangle(w - 3, h - 3, 3, 3);
