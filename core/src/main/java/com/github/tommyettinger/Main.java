@@ -71,9 +71,9 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-1.0.3.jar Gentium.ttf standard 63");
+            System.out.println("java -jar fontwriter-1.0.4.jar Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-1.0.3.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar fontwriter-1.0.4.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
@@ -97,8 +97,7 @@ public class Main extends ApplicationAdapter {
             FileHandle[] files = Gdx.files.local(inPath).list(
                     (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
             String[] fields = {"standard", "sdf", "msdf"};
-//            String[] fields = {"sdf"};
-            args = new String[]{"filename", "field", "300", "2048x2048"};
+            args = new String[]{"filename", "field", "280", "2048x2048", "black"};
             for(FileHandle file : files){
                 args[0] = file.path();
                 if(file.name().startsWith("Go-Noto")) {
@@ -106,13 +105,29 @@ public class Main extends ApplicationAdapter {
                     args[3] = "4096x4096";
                 }
                 else {
-                    args[2] = "300";
+                    args[2] = "280";
                     args[3] = "2048x2048";
                 }
                 for(String field : fields) {
                     args[1] = field;
                     mainProcess();
                 }
+            }
+        } else if("--preview".equals(args[0])) {
+            String inPath = "fonts";
+            if(args.length > 1){
+                inPath = args[1];
+            }
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                    (dir, name) -> name.endsWith("json"));
+            String[] fields = {"standard", "sdf", "msdf"};
+            args = new String[]{"filename", "field"};
+            for(FileHandle file : files) {
+                args[0] = file.path().substring(0, file.path().lastIndexOf('-'));
+                args[1] = file.nameWithoutExtension().substring(file.nameWithoutExtension().lastIndexOf('-') + 1);
+
+                String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1);
+                    makePreview(inPath + "/", fontName);
             }
         } else {
             mainProcess();
@@ -218,14 +233,18 @@ public class Main extends ApplicationAdapter {
             }
 
         }
-        System.out.println("Creating a preview...");
-        Font font = new Font("fonts/"+fontName+"-"+args[1]+".json",
-                new TextureRegion(new Texture("fonts/"+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
+        makePreview("fonts/", fontName);
+    }
+
+    private void makePreview(String inPath, String fontName) {
+        System.out.println("Creating a preview for " + fontName + "-" + args[1] + "...");
+        Font font = new Font(inPath+fontName+"-"+args[1]+".json",
+                new TextureRegion(new Texture(inPath+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
         font.setTextureFilter();
-        float newHeight = 11f * (font.originalCellHeight / font.mapping.get(' ').xAdvance);
+        float newHeight = 32f;
         if(args[1].startsWith("m"))
             font.setCrispness(55f / newHeight); // msdf or mtsdf
-//        System.out.println("Using crispness " + font.getCrispness());
+
         font.scaleTo(font.originalCellWidth*newHeight/font.originalCellHeight, newHeight);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
@@ -236,7 +255,7 @@ public class Main extends ApplicationAdapter {
 
         ScreenUtils.clear(0.75f, 0.75f, 0.75f, 1f);
         float x = Gdx.graphics.getBackBufferWidth() * 0.5f;
-        float y = (Gdx.graphics.getBackBufferHeight() + layout.getHeight()) * 0.5f - font.descent * font.scaleY;
+        float y = (Gdx.graphics.getBackBufferHeight() + layout.getHeight()) * 0.5f;
         batch.begin();
         font.enableShader(batch);
         font.drawGlyphs(batch, layout, x, y, Align.center);
@@ -251,7 +270,7 @@ public class Main extends ApplicationAdapter {
 
         PixmapIO.writePNG(Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png"), pm, 0, true);
 
-        builder.command(("distbin/oxipng.exe -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
+        ProcessBuilder builder = new ProcessBuilder(("distbin/oxipng.exe -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
