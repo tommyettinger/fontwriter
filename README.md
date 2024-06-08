@@ -25,7 +25,8 @@ Support for loading Structured JSON is present in TextraTypist snapshot builds a
 (the next release). That release also includes (or will include) `BitmapFontSupport`, which can
 load a libGDX BitmapFont from a Structured JSON font file, and `FWSkin` to load fonts produced by "FW"
 (FontWriter, this project) as `BitmapFont` or `Font`. Another micro-library exists, `FreeTypist`, to load
-FreeType font configuration in a way that `Font` and `BitmapFont` can both read.
+FreeType font configuration in a way that `Font` and `BitmapFont` can both read, as well as loading those
+from `.fnt` or `.json` files.
 
 ## Do I need to run this at all?
 
@@ -46,10 +47,10 @@ For now, this is Windows-only. I would need to build some tools for other platfo
 on Linux or macOS.
 
 If you have the JAR from the releases, unzip it so the other files it came with are all in the same folder
-structure. Then, you can enter the directory with that holds `fontwriter-1.0.3.jar` and run
-`java -jar fontwriter-1.0.3.jar "MyFont.ttf" msdf 60` , where "MyFont.ttf" can be any path to a .ttf file
+structure. Then, you can enter the directory with that holds `fontwriter-1.0.4.jar` and run
+`java -jar fontwriter-1.0.4.jar "MyFont.ttf" msdf 60` , where "MyFont.ttf" can be any path to a .ttf file
 or probably also an .otf file. "MyFont.ttf" doesn't have to be in the same folder if you give it an absolute
-path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-1.0.3.jar ` to enter its
+path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-1.0.4.jar ` to enter its
 absolute path). The second parameter, `msdf`, can also be `sdf` or `standard`. You might just want `standard`
 for many reasons; even though it won't scale up nicely, it will scale down fairly well, and you can
 interchange `standard` fonts using FontFamily or using colorful emoji. On the other hand is `msdf`, which
@@ -77,17 +78,19 @@ you're done!
 
 ## Windows Binaries? Gross!
 
-I don't like it either! You can compile msdf-atlas-gen yourself from my fork if you want to know what
-goes into this; [the commit used currently is here](https://github.com/tommyettinger/msdf-atlas-gen/commit/b3e43a788dd100e6c1a48d6e0fe189c56ee4a55d).
-The oxipng binary was downloaded from that project's repo, with earlier releases using
-[version v9.0.0](https://github.com/shssoichiro/oxipng/releases/tag/v9.0.0) (which is a little old by now), or
+They're both downloaded from the official project pages, and you can replace them if you want!
+
+The msdf-atlas-gen binary uses this starting in fontwriter 1.0.4:
+[version v1.3](https://github.com/Chlumsky/msdf-atlas-gen/releases/tag/v1.3), and older versions of
+fontwriter depended on a self-built, slightly modified fork of msdf-atlas-gen. That self-built
+mess isn't needed now. 
+
+The oxipng binary used this in earlier releases:
+[version v9.0.0](https://github.com/shssoichiro/oxipng/releases/tag/v9.0.0) (which is a little old by now), or this:
 [version v9.1.1](https://github.com/shssoichiro/oxipng/releases/tag/v9.1.1) starting in fontwriter 1.0.3.
+
 Oxipng works on many desktop platforms, but I can't compile msdf-atlas-gen for Linux,
 macOS, or ARM Windows currently.
-
-It looks like msdf-atlas-gen recently allowed access to the one feature I needed to fork to obtain before.
-That should make it possible to use an official release of msdf-atlas-gen instead of my fork. It's just
-that that project hasn't had an official release since September 2021...
 
 ## License
 
@@ -95,10 +98,7 @@ This uses the [Apache License v2.0](LICENSE).
 
 The included msdf-atlas-gen uses the
 [MIT License](https://github.com/Chlumsky/msdf-atlas-gen/blob/master/LICENSE.txt). The version used here
-isn't an identical binary to the one distributed at that repo;
-[my fork](https://github.com/tommyettinger/msdf-atlas-gen) has a small change to default to using a little
-spacing between chars. This feature will probably be in a future msdf-atlas-gen release, because most of the
-code is already there for it, but I can't say that for certain.
+is an identical binary to the one distributed at that repo (v1.3).
 
 The included oxipng also uses the [MIT License](https://github.com/shssoichiro/oxipng/blob/master/LICENSE).
 
