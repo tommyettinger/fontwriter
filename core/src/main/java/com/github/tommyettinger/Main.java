@@ -242,10 +242,10 @@ public class Main extends ApplicationAdapter {
                 new TextureRegion(new Texture(inPath+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
         font.setTextureFilter();
         float newHeight = 32f;
-        if(args[1].startsWith("m"))
-            font.setCrispness(55f / newHeight); // msdf or mtsdf
+//        if(args[1].startsWith("m"))
+//            font.setCrispness(48f / newHeight); // msdf or mtsdf
 
-        font.scaleTo(font.originalCellWidth*newHeight/font.originalCellHeight, newHeight);
+        font.scaleHeightTo(newHeight);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
         layout.setBaseColor(Color.DARK_GRAY);
