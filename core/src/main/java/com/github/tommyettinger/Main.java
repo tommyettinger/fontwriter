@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.tommyettinger.textra.ColorLookup;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
+import com.github.tommyettinger.textra.utils.LZBCompression;
 import com.github.tommyettinger.textra.utils.StringUtils;
 
 import java.awt.FontFormatException;
@@ -71,12 +72,15 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-1.0.4.jar Gentium.ttf standard 63");
+            System.out.println("java -jar fontwriter-1.1.0.jar Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-1.0.4.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar fontwriter-1.1.0.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
+            System.out.println("This writes a .png font texture, a .json file describing that texture as a font, and");
+            System.out.println("a .dat file that is a compressed version of the .json file. You only need one of the");
+            System.out.println(".json or .dat files, depending on what you use to load the font.");
             System.exit(1);
         }
         this.args = args;
@@ -196,6 +200,10 @@ public class Main extends ApplicationAdapter {
                 break;
             }
         }
+
+        System.out.println("Compressing .JSON file (optional)...");
+        ByteArray ba = LZBCompression.compressToByteArray(Gdx.files.local("fonts/"+fontName+"-"+args[1]+".json").readString("UTF8"));
+        Gdx.files.local("fonts/"+fontName+"-"+args[1]+".dat").writeBytes(ba.items, 0, ba.size, false);
 
         System.out.println("Applying changes for improved TextraTypist usage...");
         FileHandle imageFile = Gdx.files.local("fonts/"+fontName+"-"+args[1]+".png");
