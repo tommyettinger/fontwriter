@@ -169,10 +169,14 @@ public class Main extends ApplicationAdapter {
         else
             fullPreviewColor = -1;
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
+        //distbin/msdf-atlas-gen.exe -font "input/Gentium.ttf" -charset "input/Gentium.ttf.cmap.txt" -type sdf -imageout "out/fonts/Gentium-sdf.png" -json "out/fonts/Gentium-sdf.json" -pxrange 59 -dimensions 2048 2048 -size 59 -outerpxpadding 1
         String cmd = "distbin/msdf-atlas-gen.exe -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                      " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
-                     "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0))
-                     + " -dimensions " + imageSize + " -size " + size + " -outerpxpadding 1";
+//                     "-pxrange " + String.valueOf(size * 0.08f) +
+//                     "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0)) +
+                     "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.09)) +
+                     " -dimensions " + imageSize + " -size " + size + " -outerpxpadding 1";
+//        System.out.println(cmd);
         ProcessBuilder builder =
                 new ProcessBuilder(cmd.split(" "));
         List<String> commandList = builder.command();
@@ -181,7 +185,8 @@ public class Main extends ApplicationAdapter {
         while (true) {
             try {
                 commandList.set(commandList.size()-3, String.valueOf(size));
-                commandList.set(commandList.size()-8, "sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0));
+//                commandList.set(commandList.size()-8, String.valueOf(size * 0.08f));
+                commandList.set(commandList.size()-8, "sdf".equals(args[1]) ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
                 builder.command(commandList);
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
@@ -252,7 +257,7 @@ public class Main extends ApplicationAdapter {
         float newHeight = 32f;
 //        if(args[1].startsWith("m"))
 //            font.setCrispness(48f / newHeight); // msdf or mtsdf
-
+        font.setCrispness(1f);
         font.scaleHeightTo(newHeight);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
