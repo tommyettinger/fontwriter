@@ -256,7 +256,8 @@ public class Main extends ApplicationAdapter {
         font.setTextureFilter();
         float newHeight = 32f;
 //        if(args[1].startsWith("m"))
-//            font.setCrispness(48f / newHeight); // msdf or mtsdf
+//            font.setCrispness(2f); // msdf or mtsdf
+//        else
         font.setCrispness(1f);
         font.scaleHeightTo(newHeight);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
