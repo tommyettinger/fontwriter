@@ -124,7 +124,6 @@ public class Main extends ApplicationAdapter {
             }
             FileHandle[] files = Gdx.files.local(inPath).list(
                     (dir, name) -> name.endsWith("json"));
-            String[] fields = {"standard", "sdf", "msdf"};
             args = new String[]{"filename", "field"};
             for(FileHandle file : files) {
                 args[0] = file.path().substring(0, file.path().lastIndexOf('-'));
