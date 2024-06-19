@@ -1,7 +1,7 @@
 # fontwriter
 Generates and optimizes Structured JSON fonts for TextraTypist.
 
-[Also stores pre-made Structured JSON fonts here in the repo.](knownFonts/)
+[Also stores pre-made Structured JSON fonts here in the repo.](docs/knownFonts/)
 
 ## Wait, what?
 
@@ -25,15 +25,15 @@ Support for loading Structured JSON is present in TextraTypist snapshot builds a
 (the next release). That release also includes (or will include) `BitmapFontSupport`, which can
 load a libGDX BitmapFont from a Structured JSON font file, and `FWSkin` to load fonts produced by "FW"
 (FontWriter, this project) as `BitmapFont` or `Font`. Another micro-library exists, `FreeTypist`, to load
-FreeType font configuration in a way that `Font` and `BitmapFont` can both read, as well as loading those
+FreeType font configuration in a way that both `Font` and `BitmapFont` can read, as well as loading those
 from `.fnt` or `.json` files.
 
 ## Do I need to run this at all?
 
 Possibly not! There are quite a few pre-made Structured JSON fonts in a variety of styles in
-[the knownFonts folder](knownFonts/). You can copy the JSON font file, the PNG file with the same filename but
-different extension, and any license file(s) related to that font, copy them into your assets folder in a
-libGDX project, and load the JSON using code from TextraTypist (maybe just copied without a dependency).
+[the docs/knownFonts folder](docs/knownFonts/). You can copy the JSON or DAT font file, the PNG file with the same
+filename but different extension, and any license file(s) related to that font, copy them into your assets folder in a
+libGDX project, and load the JSON/DAT using code from TextraTypist (maybe just copied without a dependency).
 Using `BitmapFontSupport`, you can load Structured JSON into BitmapFont objects (this class can probably be
 copied). Otherwise, you can use the `Font` constructor that takes as its last parameter
 `boolean ignoredStructuredJsonFlag` (its value doesn't matter, just that you pass a boolean there). You can
