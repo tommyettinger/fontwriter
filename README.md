@@ -21,7 +21,7 @@ but not the AngelCode BMFont format that libGDX and TextraTypist can natively re
 though!
 
 The Structured JSON msdf-atlas-gen produces can be read in by TextraTypist to produce working fonts.
-Support for loading Structured JSON is present in TextraTypist snapshot builds and is expected in 0.11.0
+Support for loading Structured JSON is present in TextraTypist snapshot builds and is expected in 1.0.0
 (the next release). That release also includes (or will include) `BitmapFontSupport`, which can
 load a libGDX BitmapFont from a Structured JSON font file, and `FWSkin` to load fonts produced by "FW"
 (FontWriter, this project) as `BitmapFont` or `Font`. Another micro-library exists, `FreeTypist`, to load

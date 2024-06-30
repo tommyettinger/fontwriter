@@ -252,13 +252,12 @@ public class Main extends ApplicationAdapter {
         System.out.println("Creating a preview for " + fontName + "-" + args[1] + "...");
         Font font = new Font(inPath+fontName+"-"+args[1]+".json",
                 new TextureRegion(new Texture(inPath+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
-        font.setTextureFilter();
-        float newHeight = 32f;
+//        font.setTextureFilter();
 //        if(args[1].startsWith("m"))
 //            font.setCrispness(2f); // msdf or mtsdf
 //        else
-        font.setCrispness(1f);
-        font.scaleHeightTo(newHeight);
+//        font.setCrispness(1f);
+        font.scaleHeightTo(32f);
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
         layout.setBaseColor(Color.DARK_GRAY);
