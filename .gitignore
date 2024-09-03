@@ -168,3 +168,9 @@ Thumbs.db
 **/resource-config.json
 
 /fontwriter-*.jar
+jvm.dll
+java.dll
+freetype.dll
+fontmanager.dll
+awt.dll
+fontwriter.exe

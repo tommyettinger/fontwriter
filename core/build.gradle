@@ -1,8 +1,17 @@
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
-
+if(enableGraalNative == 'true') {
+  java.sourceCompatibility = JavaVersion.VERSION_11
+  java.targetCompatibility = JavaVersion.VERSION_11
+} else {
+  java.sourceCompatibility = JavaVersion.VERSION_1_8
+  java.targetCompatibility = JavaVersion.VERSION_1_8
+}
 dependencies {
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
   api "com.github.tommyettinger:regexodus:$regExodusVersion"
-  api "com.github.tommyettinger.textratypist:textratypist:$textratypistVersion"
+  api "com.github.tommyettinger:textratypist:$textratypistVersion"
+  if(enableGraalNative == 'true') {
+    implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
+  }
 }
