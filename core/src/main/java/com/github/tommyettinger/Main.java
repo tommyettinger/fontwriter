@@ -250,14 +250,23 @@ public class Main extends ApplicationAdapter {
 
     private void makePreview(String inPath, String fontName) {
         System.out.println("Creating a preview for " + fontName + "-" + args[1] + "...");
+        Texture fontTexture = new Texture(inPath+fontName+"-"+args[1]+".png");
         Font font = new Font(inPath+fontName+"-"+args[1]+".json",
-                new TextureRegion(new Texture(inPath+fontName+"-"+args[1]+".png")), 0f, 0f, 0f, 0f, true, true);
+                new TextureRegion(fontTexture), 0f, 0f, 0f, 0f,
+//            fontTexture.getHeight() >= 1024
+            true
+            , true);
 //        font.setTextureFilter();
 //        if(args[1].startsWith("m"))
 //            font.setCrispness(2f); // msdf or mtsdf
 //        else
 //        font.setCrispness(1f);
-        font.scaleHeightTo(32f);
+        if(fontTexture.getWidth() >= 1024 && fontTexture.getHeight() >= 1024)
+            font.scaleHeightTo(32f);
+        else
+            font.scale(Math.round(512f / fontTexture.getHeight()))
+                .setTextureFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
+                .useIntegerPositions(true); // for pixel fonts
         font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 
         layout.setBaseColor(Color.DARK_GRAY);
