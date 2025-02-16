@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.compression.Lzma;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.tommyettinger.textra.ColorLookup;
@@ -130,9 +131,20 @@ public class Main extends ApplicationAdapter {
                 args[1] = file.nameWithoutExtension().substring(file.nameWithoutExtension().lastIndexOf('-') + 1);
 
                 String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1);
-                    makePreview(inPath + "/", fontName);
+                makePreview(inPath + "/", fontName);
             }
-        } else {
+        } else if("--ubj".equals(args[0])) {
+            String inPath = "fonts";
+            if(args.length > 1){
+                inPath = args[1];
+            }
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                (dir, name) -> name.endsWith("json"));
+            for(FileHandle file : files) {
+                convertToUBJSON(file);
+            }
+        }
+        else {
             mainProcess();
         }
 
@@ -302,6 +314,25 @@ public class Main extends ApplicationAdapter {
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    private void convertToUBJSON(FileHandle inFile){
+        try {
+            FileHandle
+                outFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj"),
+                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".lzma");
+            UBJsonWriter ubWriter = new UBJsonWriter(outFile.write(false));
+            ubWriter.value(new JsonReader().parse(inFile));
+            ubWriter.close();
+
+            BufferedInputStream bais = new BufferedInputStream(outFile.read());
+            OutputStream lzmaOut = outLzmaFile.write(false);
+            Lzma.compress(bais, lzmaOut);
+            lzmaOut.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     private int stringToColor(String str) {
