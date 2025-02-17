@@ -143,7 +143,7 @@ public class Main extends ApplicationAdapter {
             for(FileHandle file : files) {
                 convertToUBJSON(file);
             }
-        } else if("--lzson".equals(args[0])) {
+        } else if("--lzma".equals(args[0])) {
             String inPath = "fonts";
             if(args.length > 1){
                 inPath = args[1];
@@ -151,7 +151,7 @@ public class Main extends ApplicationAdapter {
             FileHandle[] files = Gdx.files.local(inPath).list(
                 (dir, name) -> name.endsWith("json"));
             for(FileHandle file : files) {
-                convertToLzson(file);
+                convertToLzma(file);
             }
         } else {
             mainProcess();
@@ -329,7 +329,7 @@ public class Main extends ApplicationAdapter {
         try {
             FileHandle
                 outFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj"),
-                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".lzma");
+                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".ulz");
             UBJsonWriter ubWriter = new UBJsonWriter(outFile.write(false));
             ubWriter.value(new JsonReader().parse(inFile));
             ubWriter.close();
@@ -343,13 +343,13 @@ public class Main extends ApplicationAdapter {
         }
     }
 
-    private void convertToLzson(FileHandle inFile){
+    private void convertToLzma(FileHandle inFile){
         try {
             FileHandle
-                outLzsonFile = inFile.sibling(inFile.nameWithoutExtension() + ".lzson");
+                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".lzma");
 
             BufferedInputStream bais = new BufferedInputStream(inFile.read());
-            OutputStream lzmaOut = outLzsonFile.write(false);
+            OutputStream lzmaOut = outLzmaFile.write(false);
             Lzma.compress(bais, lzmaOut);
             lzmaOut.close();
         } catch (IOException e) {
