@@ -143,8 +143,17 @@ public class Main extends ApplicationAdapter {
             for(FileHandle file : files) {
                 convertToUBJSON(file);
             }
-        }
-        else {
+        } else if("--lzson".equals(args[0])) {
+            String inPath = "fonts";
+            if(args.length > 1){
+                inPath = args[1];
+            }
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                (dir, name) -> name.endsWith("json"));
+            for(FileHandle file : files) {
+                convertToLzson(file);
+            }
+        } else {
             mainProcess();
         }
 
@@ -332,7 +341,20 @@ public class Main extends ApplicationAdapter {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    private void convertToLzson(FileHandle inFile){
+        try {
+            FileHandle
+                outLzsonFile = inFile.sibling(inFile.nameWithoutExtension() + ".lzson");
+
+            BufferedInputStream bais = new BufferedInputStream(inFile.read());
+            OutputStream lzmaOut = outLzsonFile.write(false);
+            Lzma.compress(bais, lzmaOut);
+            lzmaOut.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private int stringToColor(String str) {
