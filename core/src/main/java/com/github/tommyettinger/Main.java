@@ -73,15 +73,35 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-1.2.0.jar Gentium.ttf standard 63");
+            System.out.println("java -jar fontwriter-2.0.0.jar Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-1.2.0.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar fontwriter-2.0.0.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
-            System.out.println("This writes a .png font texture, a .json file describing that texture as a font, and");
-            System.out.println("a .dat file that is a compressed version of the .json file. You only need one of the");
-            System.out.println(".json or .dat files, depending on what you use to load the font.");
+            System.out.println("This writes a .png font texture, a .json file describing that texture as a font, a");
+            System.out.println(".dat file that is a somewhat-compressed version of the .json file, a .ubj file that");
+            System.out.println("is a smaller binary form of JSON, and .lzma compressed versions of the .json and .ubj");
+            System.out.println("files with the .json.lzma and .ubj.lzma extensions. You only need one of the .json,");
+            System.out.println(".dat, .ubj, .ubj.lzma, or .json.lzma files, depending on what you use to load the font.");
+            System.out.println("The .ubj.lzma files are smallest, but .ubj doesn't work on GWT in libGDX 1.13.1 and older.");
+            System.out.println("The .json.lzma files are almost as small, and work everywhere.");
+            System.out.println();
+            System.out.println("As an alternative, you can enter some special-use commands that use a different syntax.");
+            System.out.println("The command:");
+            System.out.println("java -jar fontwriter-2.0.0.jar --bulk ttfs");
+            System.out.println("will run the program on every .otf or .ttf font in the folder 'ttfs'; you can");
+            System.out.println("omit the folder, which makes this default to the 'input' folder.");
+            System.out.println("The command:");
+            System.out.println("java -jar fontwriter-2.0.0.jar --ubj jsonFonts");
+            System.out.println("will not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
+            System.out.println("and make copies of them in the smaller binary .ubj format. It also makes compressed .ubj fonts");
+            System.out.println("with the .ubj.lzma extension. If you omit a folder name like 'jsonFonts', this defaults to 'fonts'.");
+            System.out.println("The command:");
+            System.out.println("java -jar fontwriter-2.0.0.jar --lzma jsonFonts");
+            System.out.println("will also not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
+            System.out.println("and make copies of them compressed with LZMA, using the .json.lzma extension. If you omit a folder");
+            System.out.println("name like 'jsonFonts', this defaults to 'fonts'.");
             System.exit(1);
         }
         this.args = args;
@@ -227,7 +247,10 @@ public class Main extends ApplicationAdapter {
         }
 
         System.out.println("Compressing .JSON file (optional)...");
-        ByteArray ba = LZBCompression.compressToByteArray(Gdx.files.local("fonts/"+fontName+"-"+args[1]+".json").readString("UTF8"));
+        FileHandle jsonHandle = Gdx.files.local("fonts/"+fontName+"-"+args[1]+".json");
+        convertToUBJSON(jsonHandle);
+        convertToLzma(jsonHandle);
+        ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
         Gdx.files.local("fonts/"+fontName+"-"+args[1]+".dat").writeBytes(ba.items, 0, ba.size, false);
 
         System.out.println("Applying changes for improved TextraTypist usage...");
@@ -329,7 +352,7 @@ public class Main extends ApplicationAdapter {
         try {
             FileHandle
                 outFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj"),
-                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".ulz");
+                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj.lzma");
             UBJsonWriter ubWriter = new UBJsonWriter(outFile.write(false));
             ubWriter.value(new JsonReader().parse(inFile));
             ubWriter.close();
@@ -346,7 +369,7 @@ public class Main extends ApplicationAdapter {
     private void convertToLzma(FileHandle inFile){
         try {
             FileHandle
-                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".lzma");
+                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".json.lzma");
 
             BufferedInputStream bais = new BufferedInputStream(inFile.read());
             OutputStream lzmaOut = outLzmaFile.write(false);
