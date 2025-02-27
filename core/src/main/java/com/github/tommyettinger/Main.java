@@ -183,6 +183,7 @@ public class Main extends ApplicationAdapter {
     public void mainProcess() {
         String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1, fontFileName.lastIndexOf('.'));
         FileHandle cmap = Gdx.files.local(fontFileName + ".cmap.txt");
+        int cmapLength;
         if(!cmap.exists()) {
             System.out.println("Building character map...");
             StringBuilder sb = new StringBuilder(1024);
@@ -199,9 +200,14 @@ public class Main extends ApplicationAdapter {
                 System.exit(1);
             }
             cmap.writeString(sb.toString(), false, "UTF-8");
+            cmapLength = sb.length();
+        }
+        else {
+            cmapLength = (int)(double)cmap.length(); // double cast to prevent overflow
         }
         long size = Math.round(Double.parseDouble(args[2]));
-        String imageSize = args.length > 3 ? args[3].replace('x', ' ') : "2048 2048";
+        size = Math.min(cmapLength >= 30000 ? 55 : 280, size);
+        String imageSize = args.length > 3 ? args[3].replace('x', ' ') : (cmapLength >= 30000 ? "4096 4096" : "2048 2048");
         boolean fullPreview = args.length > 4;
         int fullPreviewColor;
         if(fullPreview)
@@ -234,6 +240,9 @@ public class Main extends ApplicationAdapter {
                         System.out.println("msdf-atlas-gen failed, returning exit code " + exitCode + "; terminating.");
                         System.exit(exitCode);
                         break;
+                    }
+                    if(size % 10 == 9) {
+                        System.out.println("Sizes down to " + (size + 1) + " have been too large.");
                     }
                 } else {
                     System.out.println("Using size " + size + ".");
