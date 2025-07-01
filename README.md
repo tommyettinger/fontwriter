@@ -60,14 +60,13 @@ in the file.
 
 ## OK, how do I use this?
 
-For now, this is Windows-only. I would need to build some tools for other platforms to get this to work
-on Linux or macOS. Any help with GitHub Actions to build this on other platforms would be truly appreciated!
+~~For now, this is Windows-only.~~ We're almost able to release for macOS (x64 and arm64) and Linux (x64)!
 
 If you have the JAR from the releases, unzip it so the other files it came with are all in the same folder
-structure. Then, you can enter the directory with that holds `fontwriter-2.0.0.jar` and run
-`java -jar fontwriter-2.0.0.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
+structure. Then, you can enter the directory with that holds `fontwriter-2.0.3.jar` and run
+`java -jar fontwriter-2.0.3.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
 or an .otf file (.ttc may work). "MyFont.ttf" doesn't have to be in the same folder if you give it an absolute
-path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.0.0.jar ` to enter its
+path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.0.3.jar ` to enter its
 absolute path). The second parameter, `standard`, can also be `sdf` or `msdf`. You might just want `standard`
 for many reasons; even though it won't scale up nicely, it will scale down fairly well, and you can
 interchange `standard` fonts using FontFamily or using colorful emoji. On the other hand is `msdf`, which
@@ -98,19 +97,20 @@ you're done!
 
 ## Windows Binaries? Gross!
 
-They're both downloaded from the official project pages, and you can replace them if you want!
+Well, it turns out this isn't the case anymore, and we can now include "gross binaries" from oxipng's official releases
+as well as ones built by GitHub Actions from
+([my fork of](https://github.com/tommyettinger/msdf-atlas-gen/releases/tag/v1.3.1-alpha)) the msdf-atlas-gen repo.
+Big thanks to @EvergineTeam for setting up GH Actions in a PR to the main msdf-atlas-gen repo!
 
-The msdf-atlas-gen binary uses this starting in fontwriter 1.0.4:
+In earlier versions, msdf-atlas-gen binary used this from in fontwriter 1.0.4 to 2.0.0:
 [version v1.3](https://github.com/Chlumsky/msdf-atlas-gen/releases/tag/v1.3), and older versions of
 fontwriter depended on a self-built, slightly modified fork of msdf-atlas-gen. That self-built
-mess isn't needed now. 
+modification isn't needed anymore; EvergineTeam's changes have been applied cleanly to version 1.3 of the official
+msdf-atlas-gen repo.
 
 The oxipng binary used this in earlier releases:
 [version v9.0.0](https://github.com/shssoichiro/oxipng/releases/tag/v9.0.0) (which is a little old by now), or this:
 [version v9.1.1](https://github.com/shssoichiro/oxipng/releases/tag/v9.1.1) starting in fontwriter 1.0.3.
-
-Oxipng works on many desktop platforms, but I can't compile msdf-atlas-gen for Linux,
-macOS, or ARM Windows currently.
 
 ## License
 
@@ -118,7 +118,7 @@ This uses the [Apache License v2.0](LICENSE).
 
 The included msdf-atlas-gen uses the
 [MIT License](https://github.com/Chlumsky/msdf-atlas-gen/blob/master/LICENSE.txt). The version used here
-is an identical binary to the one distributed at that repo (v1.3).
+is built by GitHub Actions rather than being built by Chlumsky, but is still MIT-licensed.
 
 The included oxipng also uses the [MIT License](https://github.com/shssoichiro/oxipng/blob/master/LICENSE).
 

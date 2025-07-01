@@ -61,6 +61,7 @@ public class Main extends ApplicationAdapter {
             + "\n[%^small caps][*]Special[*][%] [%^whiten][/]Effects[/][%]: [%?shadow]drop shadow[%], [%?jostle]RaNsoM nOtE[%], [%?error]spell check[%]..."
             + "\nWelcome to the [_][*][TEAL]Structured JSON Zone[ ]!";
 
+    String archPath, atlasGenBinary, oxipngBinary = "oxipng";
 
     public Main(String[] args) {
         if(args == null || args.length == 0 || "-h".equals(args[0]) || "--help".equals(args[0])) {
@@ -73,9 +74,9 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-2.0.0.jar Gentium.ttf standard 63");
+            System.out.println("java -jar fontwriter-2.0.3.jar Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-2.0.0.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar fontwriter-2.0.3.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
@@ -89,22 +90,36 @@ public class Main extends ApplicationAdapter {
             System.out.println();
             System.out.println("As an alternative, you can enter some special-use commands that use a different syntax.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.0.0.jar --bulk ttfs");
+            System.out.println("java -jar fontwriter-2.0.3.jar --bulk ttfs");
             System.out.println("will run the program on every .otf or .ttf font in the folder 'ttfs'; you can");
             System.out.println("omit the folder, which makes this default to the 'input' folder.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.0.0.jar --ubj jsonFonts");
+            System.out.println("java -jar fontwriter-2.0.3.jar --ubj jsonFonts");
             System.out.println("will not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
             System.out.println("and make copies of them in the smaller binary .ubj format. It also makes compressed .ubj fonts");
             System.out.println("with the .ubj.lzma extension. If you omit a folder name like 'jsonFonts', this defaults to 'fonts'.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.0.0.jar --lzma jsonFonts");
+            System.out.println("java -jar fontwriter-2.0.3.jar --lzma jsonFonts");
             System.out.println("will also not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
             System.out.println("and make copies of them compressed with LZMA, using the .json.lzma extension. If you omit a folder");
             System.out.println("name like 'jsonFonts', this defaults to 'fonts'.");
             System.exit(1);
         }
         this.args = args;
+        switch (SharedLibraryLoader.os){
+            case Windows: archPath = "distbin/win-x64/";
+                atlasGenBinary = "msdf-atlas-gen.exe";
+                oxipngBinary = "oxipng.exe";
+                break;
+            case MacOsX: archPath = SharedLibraryLoader.architecture == Architecture.ARM
+                ? "distbin/mac-arm64/"
+                : "distbin/mac-x64/";
+                atlasGenBinary = "msdf-atlas-gen";
+                break;
+            default:
+                archPath = "distbin/linux-x64/";
+                atlasGenBinary = "msdf-atlas-gen";
+        }
 
     }
     @Override
@@ -216,7 +231,7 @@ public class Main extends ApplicationAdapter {
             fullPreviewColor = -1;
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
         //distbin/msdf-atlas-gen.exe -font "input/Gentium.ttf" -charset "input/Gentium.ttf.cmap.txt" -type sdf -imageout "out/fonts/Gentium-sdf.png" -json "out/fonts/Gentium-sdf.json" -pxrange 59 -dimensions 2048 2048 -size 59 -outerpxpadding 1
-        String cmd = "distbin/msdf-atlas-gen.exe -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
+        String cmd = archPath + atlasGenBinary + " -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                      " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
 //                     "-pxrange " + String.valueOf(size * 0.08f) +
 //                     "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0)) +
@@ -273,7 +288,7 @@ public class Main extends ApplicationAdapter {
         process(imageFile);
 
         System.out.println("Optimizing result with oxipng...");
-        builder.command(("distbin/oxipng.exe -o 6 -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
+        builder.command((archPath + oxipngBinary + " -o 6 -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
@@ -285,7 +300,7 @@ public class Main extends ApplicationAdapter {
             System.exit(1);
         }
         if (fullPreview) {
-            builder.command(("distbin/oxipng.exe -o 6 -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
+            builder.command((archPath + oxipngBinary + " -o 6 -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
             try {
                 int exitCode = builder.start().waitFor();
                 if(exitCode != 0) {
@@ -344,7 +359,7 @@ public class Main extends ApplicationAdapter {
 
         PixmapIO.writePNG(Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png"), pm, 0, true);
 
-        ProcessBuilder builder = new ProcessBuilder(("distbin/oxipng.exe -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
+        ProcessBuilder builder = new ProcessBuilder((archPath + oxipngBinary + " -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
