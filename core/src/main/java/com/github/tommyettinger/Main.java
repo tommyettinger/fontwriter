@@ -230,7 +230,7 @@ public class Main extends ApplicationAdapter {
         else
             fullPreviewColor = -1;
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
-        //distbin/msdf-atlas-gen.exe -font "input/Gentium.ttf" -charset "input/Gentium.ttf.cmap.txt" -type sdf -imageout "out/fonts/Gentium-sdf.png" -json "out/fonts/Gentium-sdf.json" -pxrange 59 -dimensions 2048 2048 -size 59 -outerpxpadding 1
+        //distbin/win-x64/msdf-atlas-gen.exe -font "input/Gentium.ttf" -charset "input/Gentium.ttf.cmap.txt" -type sdf -imageout "out/fonts/Gentium-sdf.png" -json "out/fonts/Gentium-sdf.json" -pxrange 59 -dimensions 2048 2048 -size 59 -outerpxpadding 1
         String cmd = archPath + atlasGenBinary + " -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
                      " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
 //                     "-pxrange " + String.valueOf(size * 0.08f) +
@@ -251,6 +251,7 @@ public class Main extends ApplicationAdapter {
                 builder.command(commandList);
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
+                    System.out.println(exitCode);
                     if (--size <= 0) {
                         System.out.println("msdf-atlas-gen failed, returning exit code " + exitCode + "; terminating.");
                         System.exit(exitCode);
