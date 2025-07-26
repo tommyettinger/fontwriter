@@ -58,8 +58,8 @@ public class Main extends ApplicationAdapter {
             + "\n[_]underline (even for multiple words)[_], [~]strikethrough (same)[ ],"
             + "\nscaling: [%50]very [%75]small [%100]to [%150]quite [%200]large[ ], notes: [.]sub-[.], [=]mid-[=], and [^]super-[^]script,"
             + "\ncapitalization changes: [;]Each cap, [,]All lower, [!]Caps lock[ ],"
-            + "\n[%^small caps][*]Special[*][%] [%^whiten][/]Effects[/][%]: [%?shadow]drop shadow[%], [%?jostle]RaNsoM nOtE[%], [%?error]spell check[%]..."
-            + "\nWelcome to the [_][*][TEAL]Structured JSON Zone[ ]!";
+            + "\n[?small caps][*]Special[*][?] [?whiten][/]Effects[/][?][#]: [?shadow]drop shadow[?], [?jostle]RaNsoM nOtE[?], [?error]spell check[?]..."
+            + "\nWelcome to the [TEAL][?neon]Structured JSON Zone[ ]!";
 
     String archPath, atlasGenBinary, oxipngBinary = "oxipng";
 
@@ -74,9 +74,9 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-2.0.3.jar Gentium.ttf standard 63");
+            System.out.println("java -jar fontwriter-2.1.0-SNAPSHOT.jar Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-2.0.3.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar fontwriter-2.1.0-SNAPSHOT.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
@@ -90,16 +90,16 @@ public class Main extends ApplicationAdapter {
             System.out.println();
             System.out.println("As an alternative, you can enter some special-use commands that use a different syntax.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.0.3.jar --bulk ttfs");
+            System.out.println("java -jar fontwriter-2.1.0-SNAPSHOT.jar --bulk ttfs");
             System.out.println("will run the program on every .otf or .ttf font in the folder 'ttfs'; you can");
             System.out.println("omit the folder, which makes this default to the 'input' folder.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.0.3.jar --ubj jsonFonts");
+            System.out.println("java -jar fontwriter-2.1.0-SNAPSHOT.jar --ubj jsonFonts");
             System.out.println("will not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
             System.out.println("and make copies of them in the smaller binary .ubj format. It also makes compressed .ubj fonts");
             System.out.println("with the .ubj.lzma extension. If you omit a folder name like 'jsonFonts', this defaults to 'fonts'.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.0.3.jar --lzma jsonFonts");
+            System.out.println("java -jar fontwriter-2.1.0-SNAPSHOT.jar --lzma jsonFonts");
             System.out.println("will also not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
             System.out.println("and make copies of them compressed with LZMA, using the .json.lzma extension. If you omit a folder");
             System.out.println("name like 'jsonFonts', this defaults to 'fonts'.");
