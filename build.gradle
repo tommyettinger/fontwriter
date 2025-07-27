@@ -26,11 +26,11 @@ configure(subprojects) {
   apply plugin: 'java-library'
   if(enableGraalNative == 'true') {
     if(JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)){
-      compileJava.options.release.set(11);
+      compileJava.options.release.set(11)
     }
   } else {
     if(JavaVersion.current().isJava9Compatible()){
-      compileJava.options.release.set(8);
+      compileJava.options.release.set(8)
     }
   }
 
