@@ -253,7 +253,6 @@ public class Main extends ApplicationAdapter {
                 builder.command(commandList);
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
-                    System.out.println(exitCode);
                     if (--size <= 0) {
                         System.out.println("msdf-atlas-gen failed, returning exit code " + exitCode + "; terminating.");
                         System.exit(exitCode);
