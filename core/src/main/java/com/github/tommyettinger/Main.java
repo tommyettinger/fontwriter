@@ -32,6 +32,9 @@ import static java.awt.Font.TRUETYPE_FONT;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
+
+    private static final String JAR_NAME = "fontwriter-2.2.4-SNAPSHOT.jar";
+
     static private final byte[] SIGNATURE = {(byte)137, 80, 78, 71, 13, 10, 26, 10};
     static private final int IHDR = 0x49484452, IDAT = 0x49444154, IEND = 0x49454E44,
             PLTE = 0x504C5445, TRNS = 0x74524E53;
@@ -48,8 +51,8 @@ public class Main extends ApplicationAdapter {
     private String[] args;
 
     private SpriteBatch batch;
-    private Viewport viewport;
-    private Layout layout = new Layout().setTargetWidth(1200);
+
+    private final Layout layout = new Layout().setTargetWidth(1200);
     private static final String text = "Fonts can be rendered normally,{CURLY BRACKETS ARE IGNORED} but using [[tags], you can..."
             + "\n[#E74200]...use CSS-style hex colors like [*]#E74200[*]..."
             + "\n[darker purple blue]...use color names or descriptions, like [/]darker purple blue[/]...[ ]"
@@ -74,9 +77,9 @@ public class Main extends ApplicationAdapter {
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
             System.out.println();
             System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar fontwriter-2.1.5-SNAPSHOT.jar Gentium.ttf standard 63");
+            System.out.println("java -jar " + JAR_NAME + " Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar fontwriter-2.1.5-SNAPSHOT.jar \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar " + JAR_NAME + " \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
@@ -90,16 +93,16 @@ public class Main extends ApplicationAdapter {
             System.out.println();
             System.out.println("As an alternative, you can enter some special-use commands that use a different syntax.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.1.5-SNAPSHOT.jar --bulk ttfs");
+            System.out.println("java -jar " + JAR_NAME + " --bulk ttfs");
             System.out.println("will run the program on every .otf or .ttf font in the folder 'ttfs'; you can");
             System.out.println("omit the folder, which makes this default to the 'input' folder.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.1.5-SNAPSHOT.jar --ubj jsonFonts");
+            System.out.println("java -jar " + JAR_NAME + " --ubj jsonFonts");
             System.out.println("will not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
             System.out.println("and make copies of them in the smaller binary .ubj format. It also makes compressed .ubj fonts");
             System.out.println("with the .ubj.lzma extension. If you omit a folder name like 'jsonFonts', this defaults to 'fonts'.");
             System.out.println("The command:");
-            System.out.println("java -jar fontwriter-2.1.5-SNAPSHOT.jar --lzma jsonFonts");
+            System.out.println("java -jar " + JAR_NAME + " --lzma jsonFonts");
             System.out.println("will also not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
             System.out.println("and make copies of them compressed with LZMA, using the .json.lzma extension. If you omit a folder");
             System.out.println("name like 'jsonFonts', this defaults to 'fonts'.");
@@ -125,7 +128,6 @@ public class Main extends ApplicationAdapter {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        viewport = new StretchViewport(1200, 675);
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
 
