@@ -3,7 +3,7 @@ buildscript {
     mavenCentral()
     gradlePluginPortal()
     mavenLocal()
-    maven { url 'https://jitpack.io' }
+    maven { url = 'https://jitpack.io' }
   }
   dependencies {
   }
@@ -16,8 +16,8 @@ allprojects {
   // This allows you to "Build and run using IntelliJ IDEA", an option in IDEA's Settings.
   idea {
     module {
-      outputDir file('build/classes/java/main')
-      testOutputDir file('build/classes/java/test')
+      outputDir(file('build/classes/java/main'))
+      testOutputDir(file('build/classes/java/test'))
     }
   }
 }
@@ -63,7 +63,7 @@ subprojects {
     mavenCentral()
     // You may want to remove the following line if you have errors downloading dependencies.
     mavenLocal()
-    maven { url 'https://jitpack.io' }
+    maven { url = 'https://jitpack.io' }
   }
 }
 

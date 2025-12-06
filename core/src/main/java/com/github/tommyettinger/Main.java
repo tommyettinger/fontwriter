@@ -33,7 +33,7 @@ import static java.awt.Font.TRUETYPE_FONT;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
 
-    private static final String JAR_NAME = "fontwriter-2.2.4-SNAPSHOT.jar";
+    private static final String JAR_NAME = "fontwriter-2.2.7-SNAPSHOT.jar";
 
     static private final byte[] SIGNATURE = {(byte)137, 80, 78, 71, 13, 10, 26, 10};
     static private final int IHDR = 0x49484452, IDAT = 0x49444154, IEND = 0x49454E44,
