@@ -109,9 +109,10 @@ you're done!
 ## Windows Binaries? Gross!
 
 Well, it turns out this isn't the case anymore, and we can now include "gross binaries" from oxipng's official releases
-as well as ones built by GitHub Actions from
+as well as Linux and Mac ones built by GitHub Actions from
 ([my fork of](https://github.com/tommyettinger/msdf-atlas-gen/releases/tag/v1.3.1-alpha)) the msdf-atlas-gen repo.
 Big thanks to @EvergineTeam for setting up GH Actions in a PR to the main msdf-atlas-gen repo!
+On Windows, the PR's changes don't seem to produce a working binary, so we use the official .exe (version 1.4) there.
 
 In earlier versions, msdf-atlas-gen binary used this from in fontwriter 1.0.4 to 2.0.0:
 [version v1.3](https://github.com/Chlumsky/msdf-atlas-gen/releases/tag/v1.3), and older versions of
