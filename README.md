@@ -81,16 +81,17 @@ path (on Windows, you can drag and drop a file after typing `java -jar fontwrite
 absolute path). The second parameter, `standard`, can also be `sdf` or `msdf`. You might just want `standard`
 for many reasons; even though it won't scale up nicely, it will scale down fairly well, and you can
 interchange `standard` fonts using FontFamily or using colorful emoji. On the other hand is `msdf`, which
-scales up very well, but looks a little odd with colorful emoji or other fonts. Then `sdf` is somewhere
-in the middle; it works somewhat well with emoji, though it doesn't handle their partially
-transparent edge very well, scales up nicely, and unfortunately doesn't work well with other fonts. The
+scales up very well, but looks a little odd with colorful emoji. Then `sdf` is somewhere
+in the middle; it works somewhat well with emoji, though it doesn't handle their partially transparent edge
+very well, scales up nicely, and optionally can allow a shader to automatically outline text. The
 "60" parameter is a size, I think measured in pt or px. It isn't necessarily going to be used as-is; if the
 size is too large, progressively smaller sizes will get tried until all glyphs fit. You
 can optionally specify a size of image to write (the default is 2048x2048, and fonts that only use ASCII
 probably don't need that much space) as the next parameter. After that you can optionally specify a color
 by name (such as "black" or "red") or RGB hex code (such as "BB3311"; RGBA also works but alpha is
 ignored), which will write an extra preview of all chars using that color. The last argument is there so
-that you can quickly see all chars, even on a white background.
+that you can quickly see all chars, even on a white background. The extra previews won't look very good if
+you're using `msdf` or `sdf`, but the regular preview will typically be more clear/crisp.
 
 Running that command will try the size you give it first, and if it can't fit all chars in the font into
 a 2048x2048 (or other size, if specified) image, it will reduce the size and try again, repeatedly. Once
@@ -113,6 +114,8 @@ as well as Linux and Mac ones built by GitHub Actions from
 ([my fork of](https://github.com/tommyettinger/msdf-atlas-gen/releases/tag/v1.3.1-alpha)) the msdf-atlas-gen repo.
 Big thanks to @EvergineTeam for setting up GH Actions in a PR to the main msdf-atlas-gen repo!
 On Windows, the PR's changes don't seem to produce a working binary, so we use the official .exe (version 1.4) there.
+I don't actually know if the binaries on Linux or Mac work. I don't have a Mac to test on and haven't yet tested on
+Linux, so if they work on the first try... I'll be surprised. Windows x64 works, at least.
 
 In earlier versions, msdf-atlas-gen binary used this from in fontwriter 1.0.4 to 2.0.0:
 [version v1.3](https://github.com/Chlumsky/msdf-atlas-gen/releases/tag/v1.3), and older versions of
@@ -122,7 +125,8 @@ msdf-atlas-gen repo.
 
 The oxipng binary used this in earlier releases:
 [version v9.0.0](https://github.com/shssoichiro/oxipng/releases/tag/v9.0.0) (which is a little old by now), or this:
-[version v9.1.1](https://github.com/shssoichiro/oxipng/releases/tag/v9.1.1) starting in fontwriter 1.0.3.
+[version v9.1.1](https://github.com/shssoichiro/oxipng/releases/tag/v9.1.1) starting in fontwriter 1.0.3, or this:
+[version v10.1.0](https://github.com/shssoichiro/oxipng/releases/tag/v10.1.0) starting in fontwriter 2.2.13.
 
 ## License
 

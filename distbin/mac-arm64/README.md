@@ -1,8 +1,8 @@
 # Oxipng
 
-[![Build Status](https://github.com/shssoichiro/oxipng/workflows/oxipng/badge.svg)](https://github.com/shssoichiro/oxipng/actions?query=branch%3Amaster)
+[![Build Status](https://github.com/oxipng/oxipng/workflows/oxipng/badge.svg)](https://github.com/oxipng/oxipng/actions?query=branch%3Amaster)
 [![Version](https://img.shields.io/crates/v/oxipng.svg)](https://crates.io/crates/oxipng)
-[![License](https://img.shields.io/crates/l/oxipng.svg)](https://github.com/shssoichiro/oxipng/blob/master/LICENSE)
+[![License](https://img.shields.io/crates/l/oxipng.svg)](https://github.com/oxipng/oxipng/blob/master/LICENSE)
 [![Docs](https://docs.rs/oxipng/badge.svg)](https://docs.rs/oxipng)
 
 ## Overview
@@ -13,7 +13,7 @@ interface or as a library in other Rust programs.
 ## Installing
 
 Oxipng for Windows can be downloaded via the
-[Releases](https://github.com/shssoichiro/oxipng/releases) section on its GitHub page. Recently,
+[Releases](https://github.com/oxipng/oxipng/releases) section on its GitHub page. Recently,
 however, Oxipng has also been made available through package managers. Check the list below for
 up-to-date options.
 
@@ -34,13 +34,13 @@ Oxipng can also be built from source using the latest stable or nightly Rust.
 This is primarily useful for developing on Oxipng.
 
 ```
-git clone https://github.com/shssoichiro/oxipng.git
+git clone https://github.com/oxipng/oxipng.git
 cd oxipng
 cargo build --release
 cp target/release/oxipng /usr/local/bin
 ```
 
-The current minimum supported Rust version is **1.74.0**.
+The current minimum supported Rust version is **1.85.1**.
 
 Oxipng follows Semantic Versioning.
 
@@ -76,7 +76,7 @@ All options are case-sensitive.
 \* Note that oxipng is not a brute-force optimizer. This means that while higher optimization levels
 are almost always better or equal to lower levels, this is not guaranteed and it is possible in
 rare circumstances that a lower level may give a marginally smaller output. Similarly, using Zopfli
-compression (`-Z`) is not guaranteed to always be better than without.
+compression (`-z`) is not guaranteed to always be better than without.
 
 ## Git integration via [pre-commit]
 
@@ -85,8 +85,8 @@ preamble to an already existing one:
 
 ```yaml
 repos:
-  - repo: https://github.com/shssoichiro/oxipng
-    rev: v9.1.4
+  - repo: https://github.com/oxipng/oxipng
+    rev: v10.0.0
     hooks:
       - id: oxipng
         args: ["-o", "4", "--strip", "safe", "--alpha"]
@@ -95,13 +95,15 @@ repos:
 
 ## Docker
 
-A Docker image is availlable at `ghcr.io/shssoichiro/oxipng` for `linux/amd64` and `linux/arm64`.
+A Docker image is availlable at [`ghcr.io/oxipng/oxipng`](https://github.com/oxipng/oxipng/pkgs/container/oxipng) for `linux/amd64` and `linux/arm64`.
 
 You can use it the following way:
 
 ```bash
-docker run --rm -v $(pwd):/work ghcr.io/shssoichiro/oxipng -o 4 /work/file.png
+docker run --rm -v $(pwd):/work ghcr.io/oxipng/oxipng -o 4 /work/file.png
 ```
+
+Some older images are also available at [`ghcr.io/shssoichiro/oxipng`](https://github.com/users/shssoichiro/packages/container/package/oxipng).
 
 ## Library Usage
 
@@ -115,14 +117,14 @@ input filename, into the [optimize function](https://docs.rs/oxipng/latest/oxipn
 It is recommended to disable the "binary" feature when including Oxipng as a library. Currently, there is
 no simple way to just disable one feature in Cargo, it has to be done by disabling default features
 and specifying the desired ones, for example:
-`oxipng = { version = "9.0", features = ["parallel", "zopfli", "filetime"], default-features = false }`
+`oxipng = { version = "10.0", features = ["parallel", "zopfli", "filetime"], default-features = false }`
 
 ## Software using Oxipng
 
 - [ImageOptim](https://imageoptim.com): Mac app and web service for optimizing images
 - [Squoosh](https://squoosh.app): Web app for optimizing images
 - [FileOptimizer](https://nikkhokkho.sourceforge.io/?page=FileOptimizer): Windows app for optimizing files
-- [Curtial](https://github.com/Huluti/Curtail): Linux app for optimizing images
+- [Curtail](https://github.com/Huluti/Curtail): Linux app for optimizing images
 - [pyoxipng](https://pypi.org/project/pyoxipng/): Python wrapper for Oxipng
 - [jSquash](https://github.com/jamsinclair/jSquash): Collection of WebAssembly image codecs
 - [Trunk](https://trunk.io): Developer experience toolkit for managing code
