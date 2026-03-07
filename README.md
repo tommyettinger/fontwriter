@@ -75,7 +75,7 @@ in the file. BitmapFont doesn't store any info about distance fields in its file
 
 ## OK, how do I use this?
 
-~~For now, this is Windows-only.~~ We're almost able to release for macOS (x64 and arm64) and Linux (x64)!
+~~For now, this is Windows-only.~~ We may have a working release for macOS (x64 and arm64) and Linux (x64)!
 
 If you have the JAR from the releases, unzip it so the other files it came with are all in the same folder
 structure. Then, you can enter the directory with that holds `fontwriter-2.0.3.jar` and run
