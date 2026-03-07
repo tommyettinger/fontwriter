@@ -290,7 +290,7 @@ public class Main extends ApplicationAdapter {
         process(imageFile);
 
         System.out.println("Optimizing result with oxipng...");
-        builder.command((archPath + oxipngBinary + " -o 6 -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
+        builder.command((archPath + oxipngBinary + " -o 6 --ng -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
@@ -302,7 +302,7 @@ public class Main extends ApplicationAdapter {
             System.exit(1);
         }
         if (fullPreview) {
-            builder.command((archPath + oxipngBinary + " -o 6 -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
+            builder.command((archPath + oxipngBinary + " -o 6 --ng -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
             try {
                 int exitCode = builder.start().waitFor();
                 if(exitCode != 0) {
@@ -361,7 +361,7 @@ public class Main extends ApplicationAdapter {
 
         PixmapIO.writePNG(Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png"), pm, 0, true);
 
-        ProcessBuilder builder = new ProcessBuilder((archPath + oxipngBinary + " -o 6 -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
+        ProcessBuilder builder = new ProcessBuilder((archPath + oxipngBinary + " -o 6 --ng -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
