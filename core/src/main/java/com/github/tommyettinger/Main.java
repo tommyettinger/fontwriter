@@ -198,8 +198,13 @@ public class Main extends ApplicationAdapter {
     }
 
     public void mainProcess() {
-        String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1, fontFileName.lastIndexOf('.'));
-        FileHandle cmap = Gdx.files.local(fontFileName + ".cmap.txt");
+        String fontFileName = args[0];
+        FileHandle fontHandle = Gdx.files.absolute(fontFileName);
+        if(!fontHandle.exists()) {
+            fontHandle = Gdx.files.local(fontFileName);
+        }
+        String fontName = fontHandle.nameWithoutExtension();
+        FileHandle cmap = fontHandle.sibling(fontHandle.name() + ".cmap.txt");
         int cmapLength;
         if(!cmap.exists()) {
             System.out.println("Building character map...");
