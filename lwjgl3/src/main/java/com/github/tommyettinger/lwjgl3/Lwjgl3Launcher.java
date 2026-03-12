@@ -7,7 +7,7 @@ import com.github.tommyettinger.Main;
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
-        if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
+        if (StartupHelper.startNewJvmIfRequired(args)) return; // This handles macOS support and helps on Windows.
         new Lwjgl3Application(new Main(args), getDefaultConfiguration());
     }
 
