@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Deflater;
@@ -201,39 +202,99 @@ public class Main extends ApplicationAdapter {
     public void mainProcess() {
         String fontFileName = args[0];
         FileHandle fontHandle = Gdx.files.absolute(fontFileName);
-        if(!fontHandle.exists()) {
+        if (!fontHandle.exists()) {
             fontHandle = Gdx.files.local(fontFileName);
         }
         String fontName = fontHandle.nameWithoutExtension();
         FileHandle cmap = fontHandle.sibling(fontHandle.name() + ".cmap.txt");
         int cmapLength;
-        if(!cmap.exists()) {
-            System.out.println("Building character map...");
-            StringBuilder sb = new StringBuilder(1024);
+        if (!cmap.exists()) {
+            System.out.println("Building character map from ASCII + translation files...");
+
+            IntSet charSet = new IntSet(65536);
+
+            // All ASCII + extended ASCII (32–255)
+            for (int i = 32; i <= 255; i++) {
+                charSet.add(i);
+            }
+
+            // Collect every char from files named lang_* or *.properties in the same folder as the .ttf
+            FileHandle fontDir = fontHandle.parent();
+            if (fontDir != null) {
+                FileHandle[] langFiles =
+                    fontDir.list((d, name) -> name.toLowerCase(Locale.ROOT).startsWith("lang_")
+                        || name.toLowerCase(Locale.ROOT).endsWith(".properties"));
+                if (langFiles != null && langFiles.length > 0) {
+                    for (FileHandle f : langFiles) {
+                        try {
+                            String content = f.readString("UTF-8");
+                            for (int i = 0; i < content.length(); i++) {
+                                charSet.add(content.charAt(i));
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Failed to read " + f.path() + ": " + e.getMessage());
+                        }
+                    }
+                } else {
+                    // no lang_ or .properties files; create full character map.
+                    for (int i = 32; i < 65536; i++) {
+                        charSet.add(i);
+                    }
+                }
+            }
+
+            // Original weird / control chars to exclude
+            int[] weirdChars =
+                {0x200C, 0x200D, 0x200E, 0x200F, 0x2028, 0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x206A,
+                    0x206B, 0x206C, 0x206D, 0x206E, 0x206F};
+
+            // Filter only displayable characters
+            IntArray displayableCharSet = new IntArray(1024);
             try {
                 java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(args[0]));
-                int[] weirdChars = {0x200C, 0x200D, 0x200E, 0x200F, 0x2028, 0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x206A, 0x206B, 0x206C, 0x206D, 0x206E, 0x206F};
-                for (int i = 32; i < 65536; i++) {
-                    if(Arrays.binarySearch(weirdChars, i) < 0 && af.canDisplay(i))
-                        sb.append(i).append(' ');
+                IntSet.IntSetIterator iter = charSet.iterator();
+                while (iter.hasNext) {
+                    int code = iter.next();
+                    // Skip control chars + original weird formatting chars
+                    if (code < 32 || (code >= 0x7F && code <= 0x9F) ||         /* C1 controls */
+                        Arrays.binarySearch(weirdChars, code) >= 0) {
+                        continue;
+                    }
+
+                    if (af.canDisplay(code)) {
+                        displayableCharSet.add(code);
+                    } else {
+                        char ch = (char) code;
+                        String printable = (ch >= 32 && ch <= 126) ? String.valueOf(ch) : "\\u" + String.format("%04X", code);
+                        System.out.println("Font cannot display code " + code + " (" + printable + ")");
+                    }
                 }
-                if (sb.length() > 0) sb.deleteCharAt(sb.length() - 1);
-            } catch (FontFormatException | IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 System.exit(1);
             }
+
+            // Build final string without trailing space
+            StringBuilder sb = new StringBuilder(4096);
+
+            for (int i = 0, n = displayableCharSet.size; i < n; i++) {
+                sb.append(displayableCharSet.get(i));
+                if (i + 1 < n) {
+                    sb.append(' ');
+                }
+            }
+
             cmap.writeString(sb.toString(), false, "UTF-8");
             cmapLength = sb.length();
-        }
-        else {
-            cmapLength = (int)(double)cmap.length(); // double cast to prevent overflow
+        } else {
+            cmapLength = (int) (double) cmap.length(); // double cast to prevent overflow
         }
         long size = Math.round(Double.parseDouble(args[2]));
         size = Math.min(cmapLength >= 30000 ? 55 : 280, size);
         String imageSize = args.length > 3 ? args[3].replace('x', ' ') : (cmapLength >= 30000 ? "4096 4096" : "2048 2048");
         boolean fullPreview = args.length > 4;
         int fullPreviewColor;
-        if(fullPreview)
+        if (fullPreview)
             fullPreviewColor = stringToColor(args[4].replaceAll("['\"]", ""));
         else
             fullPreviewColor = -1;
@@ -241,15 +302,26 @@ public class Main extends ApplicationAdapter {
         //distbin/win-x64/msdf-atlas-gen.exe -font "input/Gentium.ttf" -charset "input/Gentium.ttf.cmap.txt" -type sdf -imageout "out/fonts/Gentium-sdf.png" -json "out/fonts/Gentium-sdf.json" -pxrange 59 -dimensions 2048 2048 -size 59 -outerpxpadding 1
         List<String> commandList = new ArrayList<>();
         commandList.add(archPath + atlasGenBinary);
-        commandList.add("-font");        commandList.add(fontFileName);
-        commandList.add("-charset");     commandList.add(fontFileName + ".cmap.txt");
-        commandList.add("-type");        commandList.add("standard".equals(args[1]) ? "softmask" : args[1]);
-        commandList.add("-imageout");    commandList.add("fonts/" + fontName + "-" + args[1] + ".png");
-        commandList.add("-json");        commandList.add("fonts/" + fontName + "-" + args[1] + ".json");
-        commandList.add("-pxrange");     commandList.add(String.valueOf("sdf".equals(args[1]) ? size * 0.15f : size * 0.09f));
-        commandList.add("-dimensions");  String[] dims = imageSize.trim().split("[x ]+"); commandList.add(dims[0]); commandList.add(dims[1]);
-        commandList.add("-size");        commandList.add(String.valueOf(size));
-        commandList.add("-outerpxpadding"); commandList.add("1");
+        commandList.add("-font");
+        commandList.add(fontFileName);
+        commandList.add("-charset");
+        commandList.add(fontFileName + ".cmap.txt");
+        commandList.add("-type");
+        commandList.add("standard".equals(args[1]) ? "softmask" : args[1]);
+        commandList.add("-imageout");
+        commandList.add("fonts/" + fontName + "-" + args[1] + ".png");
+        commandList.add("-json");
+        commandList.add("fonts/" + fontName + "-" + args[1] + ".json");
+        commandList.add("-pxrange");
+        commandList.add(String.valueOf("sdf".equals(args[1]) ? size * 0.15f : size * 0.09f));
+        commandList.add("-dimensions");
+        String[] dims = imageSize.trim().split("[x ]+");
+        commandList.add(dims[0]);
+        commandList.add(dims[1]);
+        commandList.add("-size");
+        commandList.add(String.valueOf(size));
+        commandList.add("-outerpxpadding");
+        commandList.add("1");
 
         ProcessBuilder builder = new ProcessBuilder(commandList);
         System.out.println("Running command: " + String.join(" ", builder.command()));
@@ -258,9 +330,9 @@ public class Main extends ApplicationAdapter {
         builder.inheritIO();
         while (true) {
             try {
-                commandList.set(commandList.size()-3, String.valueOf(size));
+                commandList.set(commandList.size() - 3, String.valueOf(size));
 //                commandList.set(commandList.size()-8, String.valueOf(size * 0.08f));
-                commandList.set(commandList.size()-8, "sdf".equals(args[1]) ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
+                commandList.set(commandList.size() - 8, "sdf".equals(args[1]) ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
                 builder.command(commandList);
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
@@ -269,7 +341,7 @@ public class Main extends ApplicationAdapter {
                         System.exit(exitCode);
                         break;
                     }
-                    if(size % 10 == 9) {
+                    if (size % 10 == 9) {
                         System.out.println("Sizes down to " + (size + 1) + " have been too large.");
                     }
                 } else {
@@ -284,18 +356,17 @@ public class Main extends ApplicationAdapter {
         }
 
         System.out.println("Compressing .JSON file (optional)...");
-        FileHandle jsonHandle = Gdx.files.local("fonts/"+fontName+"-"+args[1]+".json");
+        FileHandle jsonHandle = Gdx.files.local("fonts/" + fontName + "-" + args[1] + ".json");
         convertToUBJSON(jsonHandle);
         convertToLzma(jsonHandle);
         ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
-        Gdx.files.local("fonts/"+fontName+"-"+args[1]+".dat").writeBytes(ba.items, 0, ba.size, false);
+        Gdx.files.local("fonts/" + fontName + "-" + args[1] + ".dat").writeBytes(ba.items, 0, ba.size, false);
 
         System.out.println("Applying changes for improved TextraTypist usage...");
-        FileHandle imageFile = Gdx.files.local("fonts/"+fontName+"-"+args[1]+".png");
+        FileHandle imageFile = Gdx.files.local("fonts/" + fontName + "-" + args[1] + ".png");
         FileHandle fullPreviewFile = imageFile;
-        if(fullPreview)
-        {
-            fullPreviewFile = Gdx.files.local("previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png");
+        if (fullPreview) {
+            fullPreviewFile = Gdx.files.local("previews/full-" + args[4] + "-" + fontName + "-" + args[1] + ".png");
             imageFile.copyTo(fullPreviewFile);
             process(fullPreviewFile, fullPreviewColor);
         }
@@ -316,7 +387,7 @@ public class Main extends ApplicationAdapter {
 
         try {
             int exitCode = builder.start().waitFor();
-            if(exitCode != 0) {
+            if (exitCode != 0) {
                 System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
                 System.exit(exitCode);
             }
@@ -330,7 +401,7 @@ public class Main extends ApplicationAdapter {
             System.out.println("Running command: " + String.join(" ", builder.command()));
             try {
                 int exitCode = builder.start().waitFor();
-                if(exitCode != 0) {
+                if (exitCode != 0) {
                     System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
                     System.exit(exitCode);
                 }
