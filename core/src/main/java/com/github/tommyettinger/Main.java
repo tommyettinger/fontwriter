@@ -21,6 +21,7 @@ import java.awt.FontFormatException;
 import java.io.*;
 import java.lang.StringBuilder;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.CRC32;
@@ -33,7 +34,7 @@ import static java.awt.Font.TRUETYPE_FONT;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
 
-    private static final String JAR_NAME = "fontwriter-2.2.13.jar";
+    private static final String JAR_NAME = "fontwriter-2.2.13.1-SNAPSHOT.jar";
 
     static private final byte[] SIGNATURE = {(byte)137, 80, 78, 71, 13, 10, 26, 10};
     static private final int IHDR = 0x49484452, IDAT = 0x49444154, IEND = 0x49454E44,
@@ -238,16 +239,21 @@ public class Main extends ApplicationAdapter {
             fullPreviewColor = -1;
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
         //distbin/win-x64/msdf-atlas-gen.exe -font "input/Gentium.ttf" -charset "input/Gentium.ttf.cmap.txt" -type sdf -imageout "out/fonts/Gentium-sdf.png" -json "out/fonts/Gentium-sdf.json" -pxrange 59 -dimensions 2048 2048 -size 59 -outerpxpadding 1
-        String cmd = archPath + atlasGenBinary + " -font \"" + fontFileName + "\" -charset \"" + fontFileName + ".cmap.txt\"" +
-                     " -type "+("standard".equals(args[1]) ? "softmask" : args[1])+" -imageout \"fonts/"+fontName+"-"+args[1]+".png\" -json \"fonts/"+fontName+"-"+args[1]+".json\" " +
-//                     "-pxrange " + String.valueOf(size * 0.08f) +
-//                     "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(Math.pow(Math.log(size) * 0.31, 4.8)) : String.valueOf(Math.log(size) * 1.5 + 1.0)) +
-                     "-pxrange " + ("sdf".equals(args[1]) ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.09)) +
-                     " -dimensions " + imageSize + " -size " + size + " -outerpxpadding 1";
-//        System.out.println(cmd);
-        ProcessBuilder builder =
-                new ProcessBuilder(cmd.split(" "));
-        List<String> commandList = builder.command();
+        List<String> commandList = new ArrayList<>();
+        commandList.add(archPath + atlasGenBinary);
+        commandList.add("-font");        commandList.add(fontFileName);
+        commandList.add("-charset");     commandList.add(fontFileName + ".cmap.txt");
+        commandList.add("-type");        commandList.add("standard".equals(args[1]) ? "softmask" : args[1]);
+        commandList.add("-imageout");    commandList.add("fonts/" + fontName + "-" + args[1] + ".png");
+        commandList.add("-json");        commandList.add("fonts/" + fontName + "-" + args[1] + ".json");
+        commandList.add("-pxrange");     commandList.add(String.valueOf("sdf".equals(args[1]) ? size * 0.15f : size * 0.09f));
+        commandList.add("-dimensions");  String[] dims = imageSize.trim().split("[x ]+"); commandList.add(dims[0]); commandList.add(dims[1]);
+        commandList.add("-size");        commandList.add(String.valueOf(size));
+        commandList.add("-outerpxpadding"); commandList.add("1");
+
+        ProcessBuilder builder = new ProcessBuilder(commandList);
+        System.out.println("Running command: " + String.join(" ", builder.command()));
+
         builder.directory(new File(Gdx.files.getLocalStoragePath()));
         builder.inheritIO();
         while (true) {
@@ -286,16 +292,28 @@ public class Main extends ApplicationAdapter {
 
         System.out.println("Applying changes for improved TextraTypist usage...");
         FileHandle imageFile = Gdx.files.local("fonts/"+fontName+"-"+args[1]+".png");
+        FileHandle fullPreviewFile = imageFile;
         if(fullPreview)
         {
-            FileHandle fullPreviewFile = Gdx.files.local("previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png");
+            fullPreviewFile = Gdx.files.local("previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png");
             imageFile.copyTo(fullPreviewFile);
             process(fullPreviewFile, fullPreviewColor);
         }
         process(imageFile);
 
         System.out.println("Optimizing result with oxipng...");
-        builder.command((archPath + oxipngBinary + " -o 6 --ng -s \"fonts/"+fontName+"-"+args[1]+".png\"").split(" "));
+
+        List<String> oxiCmd = new ArrayList<>();
+        oxiCmd.add(archPath + oxipngBinary);
+        oxiCmd.add("-o");
+        oxiCmd.add("6");
+        oxiCmd.add("--ng");
+        oxiCmd.add("-s");
+        oxiCmd.add(imageFile.path());
+
+        builder.command(oxiCmd);
+        System.out.println("Running command: " + String.join(" ", builder.command()));
+
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
@@ -307,7 +325,9 @@ public class Main extends ApplicationAdapter {
             System.exit(1);
         }
         if (fullPreview) {
-            builder.command((archPath + oxipngBinary + " -o 6 --ng -s \"previews/full-"+args[4]+"-"+fontName+"-"+args[1]+".png\"").split(" "));
+            oxiCmd.set(oxiCmd.size() - 1, fullPreviewFile.path());
+            builder.command(oxiCmd);
+            System.out.println("Running command: " + String.join(" ", builder.command()));
             try {
                 int exitCode = builder.start().waitFor();
                 if(exitCode != 0) {
@@ -364,9 +384,19 @@ public class Main extends ApplicationAdapter {
         Gdx.gl.glReadPixels(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), GL20.GL_RGB, GL20.GL_UNSIGNED_BYTE, pixels);
         // End Pixmap.createFromFrameBuffer() modified code
 
-        PixmapIO.writePNG(Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png"), pm, 0, true);
+        FileHandle previewFile = Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png");
+        PixmapIO.writePNG(previewFile, pm, 0, true);
 
-        ProcessBuilder builder = new ProcessBuilder((archPath + oxipngBinary + " -o 6 --ng -s \"previews/"+fontName+"-"+args[1]+".png\"").split(" "));
+        List<String> oxiCmd = new ArrayList<>();
+        oxiCmd.add(archPath + oxipngBinary);
+        oxiCmd.add("-o");
+        oxiCmd.add("6");
+        oxiCmd.add("--ng");
+        oxiCmd.add("-s");
+        oxiCmd.add(previewFile.path());
+
+        ProcessBuilder builder = new ProcessBuilder(oxiCmd);
+        System.out.println("Running command: " + String.join(" ", builder.command()));
         try {
             int exitCode = builder.start().waitFor();
             if(exitCode != 0) {
