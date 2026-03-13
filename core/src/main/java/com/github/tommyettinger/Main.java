@@ -71,20 +71,32 @@ public class Main extends ApplicationAdapter {
     public Main(String[] args) {
         if(args == null || args.length == 0 || "-h".equals(args[0]) || "--help".equals(args[0])) {
             System.out.println("You must pass at least the following parameters:");
-            System.out.println(" - the path to a font file (it can be TTF or OTF),");
+            System.out.println(" - the path to a font file (it can be TTF or OTF, and a local or absolute path),");
             System.out.println(" - the mode to use ('msdf', 'sdf', 'mtsdf', 'psdf', or 'standard'),");
             System.out.println(" - the initial size to try (as an int or double)");
             System.out.println("Optionally, you can pass the following parameters after those:");
-            System.out.println(" - the image size (it defaults to 2048x2048, and must be separated by 'x')");
+            System.out.println(" - the image size (it must int width and int height separated by 'x')");
             System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
+            System.out.println(" - a local or absolute path to a folder containing I18N files to determine what chars to use.");
+            System.out.println("   - these files start with 'lang_' or have the extension '.properties'.");
+            System.out.println("If the image size is absent, the default is 2048x2048.");
+            System.out.println("If the color name is absent or malformed, the default won't write an extra preview.");
+            System.out.println("If the I18N path is absent, the default is the same folder as the font file.");
+            System.out.println("This means if any files start with 'lang_' or have the extension '.properties' and are");
+            System.out.println("in the same folder as your font file, they will be used to determine the char set,");
+            System.out.println("unless you specify a different folder or use a different path for the font file.");
+            System.out.println("If no I18N files are present, this will use all chars present in the font.");
             System.out.println();
             System.out.println("For example, you could use this full command:");
             System.out.println("java -jar " + JAR_NAME + " Gentium.ttf standard 63");
             System.out.println("or this one:");
-            System.out.println("java -jar " + JAR_NAME + " \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\"");
+            System.out.println("java -jar " + JAR_NAME + " \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\" \"i18n/pt_BR\"");
             System.out.println();
             System.out.println("Both will write the complete contents of the font, at different font sizes, and");
             System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
+            System.out.println("The second command also loads a subset of chars to use for the font from the folder");
+            System.out.println("i18n/pt_BR/ (local or absolute; local in this case), looking for any files with file");
+            System.out.println("names starting with 'lang_' or with the extension '.properties' .");
             System.out.println("This writes a .png font texture, a .json file describing that texture as a font, a");
             System.out.println(".dat file that is a somewhat-compressed version of the .json file, a .ubj file that");
             System.out.println("is a smaller binary form of JSON, and .lzma compressed versions of the .json and .ubj");

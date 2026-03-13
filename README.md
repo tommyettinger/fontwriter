@@ -93,9 +93,17 @@ size is too large, progressively smaller sizes will get tried until all glyphs f
 can optionally specify a size of image to write (the default is 2048x2048, and fonts that only use ASCII
 probably don't need that much space) as the next parameter. After that you can optionally specify a color
 by name (such as "black" or "red") or RGB hex code (such as "BB3311"; RGBA also works but alpha is
-ignored), which will write an extra preview of all chars using that color. The last argument is there so
+ignored), which will write an extra preview of all chars using that color. The fifth argument is there so
 that you can quickly see all chars, even on a white background. The extra previews won't look very good if
-you're using `msdf` or `sdf`, but the regular preview will typically be more clear/crisp.
+you're using `msdf` or `sdf`, but the regular preview will typically be more clear/crisp. An optional sixth
+argument is a path (local or absolute) to a folder containing I18N files: either text files that have names
+starting with "lang_" or files with the extension ".properties". If any files are present with matching names
+in that folder, their contents will be used to determine the character set used by the font. If the sixth
+argument is not present or is a non-existent path, then the folder containing the font file is used, and will
+look for the same name patterns in the folder with the font file. If no text files have matching names, then
+every char in the font will be used in the generated files. If you have `lang_*` or `*.properties` files in
+your project, it is suggested to put them in their own folder or folders and specify the path yourself,
+rather than relying on having a mix of I18N and font files in one folder.
 
 Running that command will try the size you give it first, and if it can't fit all chars in the font into
 a 2048x2048 (or other size, if specified) image, it will reduce the size and try again, repeatedly. Once
