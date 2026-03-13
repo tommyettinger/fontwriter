@@ -75,13 +75,13 @@ in the file. BitmapFont doesn't store any info about distance fields in its file
 
 ## OK, how do I use this?
 
-~~For now, this is Windows-only.~~ We may have a working release for macOS (x64 and arm64) and Linux (x64)!
+This has always worked on Windows, but now we have a working release for macOS (x64 and arm64) and Linux (x64)!
 
 If you have the JAR from the releases, unzip it so the other files it came with are all in the same folder
-structure. Then, you can enter the directory with that holds `fontwriter-2.0.3.jar` and run
-`java -jar fontwriter-2.0.3.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
+structure. Then, you can enter the directory with that holds `fontwriter-2.2.13.1.jar` and run
+`java -jar fontwriter-2.2.13.1.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
 or an .otf file (.ttc may work). "MyFont.ttf" doesn't have to be in the same folder if you give it an absolute
-path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.0.3.jar ` to enter its
+path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.2.13.1.jar ` to enter its
 absolute path). The second parameter, `standard`, can also be `sdf` or `msdf`. You might just want `standard`
 for many reasons; even though it won't scale up nicely, it will scale down fairly well, and you can
 interchange `standard` fonts using FontFamily or using colorful emoji. On the other hand is `msdf`, which
