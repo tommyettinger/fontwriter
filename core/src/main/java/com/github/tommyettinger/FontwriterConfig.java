@@ -69,10 +69,12 @@ public class FontwriterConfig {
          *  but looks odd with colorful emoji. */
         MSDF("msdf", "msdf"),
 
-        /** Multi-channel + true SDF hybrid. */
+        /** Multichannel + true SDF hybrid. Not currently loaded
+         * by TextraTypist. */
         MTSDF("mtsdf", "mtsdf"),
 
-        /** Pseudo signed distance field. */
+        /** Pseudo signed distance field. Not currently loaded
+         * by TextraTypist. */
         PSDF("psdf", "psdf");
 
         /** The user-facing CLI name (e.g. "standard", "msdf"). */
@@ -313,7 +315,7 @@ public class FontwriterConfig {
      * <b>Detection logic:</b> if the value contains {@code *} or
      * {@code ?}, it is treated as a glob pattern. Otherwise, if it
      * points to an existing directory, it is treated as a folder.
-     * Otherwise it is treated as a single file path.
+     * Otherwise, it is treated as a single file path.
      * <p>
      * <b>Flag:</b> {@code --lang <path|pattern>}
      * <p>

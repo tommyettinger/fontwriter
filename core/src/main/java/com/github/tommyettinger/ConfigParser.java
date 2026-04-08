@@ -44,13 +44,13 @@ public class ConfigParser {
 
         String first = args[0];
 
-        // --- Help (--help is primary; -h is legacy shorthand) ---
+        // --- Help (--help is primary; -h is shorthand) ---
         if ("--help".equals(first) || "-h".equals(first)) {
             config.helpRequested = true;
             return config;
         }
 
-        // --- Version (--version is primary; -v is legacy shorthand) ---
+        // --- Version (--version is primary; -v is shorthand) ---
         if ("--version".equals(first) || "-v".equals(first)) {
             config.versionRequested = true;
             return config;
@@ -118,11 +118,12 @@ public class ConfigParser {
      *   <li>{@code --lang} — I18N translation folder path</li>
      *   <li>{@code --charset} — predefined character set name</li>
      * </ul>
-     * Legacy short flags (deprecated, will be removed):
+     * Short flags (aliases for longer flags):
      * <ul>
      *   <li>{@code -s} → {@code --image-size}</li>
      *   <li>{@code -c} → {@code --color}</li>
      *   <li>{@code -l} → {@code --lang}</li>
+     *   <li>{@code -C} → {@code --charset}</li>
      * </ul>
      */
     private static void parseFlags(String[] args, int startIndex, FontwriterConfig config) {
@@ -130,9 +131,8 @@ public class ConfigParser {
         while (i < args.length) {
             String flag = args[i];
 
-            // Resolve legacy short flags to their canonical form.
-            // TODO: Remove legacy short flags in a future version.
-            String canonical = resolveLegacyFlag(flag);
+            // Resolve short flags to their canonical form.
+            String canonical = resolveShortFlag(flag);
 
             switch (canonical) {
                 case "--image-size":
@@ -215,23 +215,20 @@ public class ConfigParser {
     }
 
     /**
-     * Maps deprecated single-char flags to their canonical long form.
-     * Prints a deprecation warning if a legacy flag is used.
-     * Returns the flag unchanged if it's not a known legacy shorthand.
+     * Maps single-char flags to their canonical long form.
+     * Returns the flag unchanged if it's not a known shorthand.
      * <p>
-     * TODO: Remove this method when legacy short flags are dropped.
      */
-    private static String resolveLegacyFlag(String flag) {
+    private static String resolveShortFlag(String flag) {
         switch (flag) {
             case "-s":
-                System.err.println("Warning: -s is deprecated, use --image-size instead.");
                 return "--image-size";
             case "-c":
-                System.err.println("Warning: -c is deprecated, use --color instead.");
                 return "--color";
             case "-l":
-                System.err.println("Warning: -l is deprecated, use --lang instead.");
                 return "--lang";
+            case "-C":
+                return "--charset";
             default:
                 return flag;
         }

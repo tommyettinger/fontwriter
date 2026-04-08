@@ -9,22 +9,18 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.compression.Lzma;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.tommyettinger.textra.ColorLookup;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
 import com.github.tommyettinger.textra.utils.LZBCompression;
 import com.github.tommyettinger.textra.utils.StringUtils;
 
-import java.awt.FontFormatException;
 import java.io.*;
 import java.lang.StringBuilder;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Deflater;
@@ -116,13 +112,13 @@ public class Main extends ApplicationAdapter {
         System.out.println();
         System.out.println("  <mode>     Rendering mode. One of:");
         System.out.println("               standard  — non-distance-field bitmap. Scales down well.");
-        System.out.println("                           Works everywhere including BitmapFont. (recommended)");
-        System.out.println("               sdf       — signed distance field. Scales up nicely, supports");
-        System.out.println("                           outline effects. Good middle ground.");
+        System.out.println("                           Works everywhere including BitmapFont. (default)");
+        System.out.println("               sdf       — signed distance field. Scales up nicely; supports");
+        System.out.println("                           outline effects. Has small file sizes.");
         System.out.println("               msdf      — multichannel SDF. Best upscaling quality, but");
-        System.out.println("                           looks odd with colorful emoji.");
-        System.out.println("               mtsdf     — multi-channel + true SDF hybrid.");
-        System.out.println("               psdf      — pseudo SDF.");
+        System.out.println("                           files are large.");
+//        System.out.println("               mtsdf     — multichannel + true SDF hybrid.");
+//        System.out.println("               psdf      — pseudo SDF.");
         System.out.println();
         System.out.println("  <size>     Initial font size to try, in pixels (integer or decimal).");
         System.out.println("             Recommended: 60 for most fonts. Use 200-280 for sharper");
@@ -133,16 +129,17 @@ public class Main extends ApplicationAdapter {
 
         // --- Options ---
         System.out.println("Options (can be given in any order after the required arguments):");
-        System.out.println();
+        System.out.println("");
+        System.out.println("  -s WxH");
         System.out.println("  --image-size WxH   Output image dimensions.");
         System.out.println("                     Default: 2048x2048 (or 4096x4096 for 30000+ chars).");
-        System.out.println("                     Deprecated legacy shorthand: -s");
-        System.out.println();
+        System.out.println("");
+        System.out.println("  -c COLOR");
         System.out.println("  --color COLOR      Generate an extra full-glyph preview with the given");
         System.out.println("                     text color. Accepts named colors ('black',");
         System.out.println("                     'dark dullest violet-blue') or hex ('#E74200').");
-        System.out.println("                     Deprecated legacy shorthand: -c");
-        System.out.println();
+        System.out.println("");
+        System.out.println("  -C NAME");
         System.out.println("  --charset NAME     Use a predefined character set instead of including");
         System.out.println("                     every character in the font. Available sets:");
         System.out.println("                       ascii     — Basic ASCII (32-126). English only.");
@@ -156,7 +153,8 @@ public class Main extends ApplicationAdapter {
         System.out.println("                     Default: 'all' (every visible character in the font).");
         System.out.println("                     Can be overridden with a specific set, or replaced");
         System.out.println("                     entirely by using --lang instead (see below).");
-        System.out.println();
+        System.out.println("");
+        System.out.println("  -l PATH");
         System.out.println("  --lang PATH        I18N source for character extraction. Accepts:");
         System.out.println("                       Folder:  --lang i18n/de");
         System.out.println("                         Reads all files in that folder.");
@@ -164,11 +162,13 @@ public class Main extends ApplicationAdapter {
         System.out.println("                         Matches files against the glob (* and ? wildcards).");
         System.out.println("                       File:    --lang i18n/de/strings.properties");
         System.out.println("                         Reads that single file.");
-        System.out.println("                     Characters found (plus ASCII 32-255 baseline) determine");
+        System.out.println("                     Characters found (plus ASCII 32-126 baseline) determine");
         System.out.println("                     which glyphs to include. Only active when explicitly passed.");
-        System.out.println("                     Deprecated legacy shorthand: -l");
-        System.out.println();
+        System.out.println("");
+        System.out.println("  -h");
         System.out.println("  --help             Show this help message and exit.");
+        System.out.println("");
+        System.out.println("  -v");
         System.out.println("  --version          Show version and exit.");
         System.out.println();
 
@@ -189,7 +189,7 @@ public class Main extends ApplicationAdapter {
         System.out.println("    Image: 2048x2048 (default). No extra color preview.");
         System.out.println();
         System.out.println("  java -jar " + jar + " MyFont.otf msdf 200 --image-size 4096x4096");
-        System.out.println("    Font: MyFont.otf. Mode: msdf (best upscaling). Size: starts at 200px.");
+        System.out.println("    Font: MyFont.otf. Mode: msdf. Size: starts at 200px.");
         System.out.println("    Charset: all visible chars. Image: 4096x4096 (explicit).");
         System.out.println("    No extra color preview.");
         System.out.println();
@@ -860,8 +860,7 @@ public class Main extends ApplicationAdapter {
 
     private void convertToLzma(FileHandle inFile){
         try {
-            FileHandle
-                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".json.lzma");
+            FileHandle outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".json.lzma");
 
             BufferedInputStream bais = new BufferedInputStream(inFile.read());
             OutputStream lzmaOut = outLzmaFile.write(false);
