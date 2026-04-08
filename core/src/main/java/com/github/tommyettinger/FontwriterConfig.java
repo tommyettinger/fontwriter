@@ -32,7 +32,7 @@ import java.util.Locale;
  *   <li>If {@code --charset} is given, use that predefined character set.</li>
  *   <li>If {@code --lang} is given, read the specified files (folder, glob,
  *       or single file) and include every character found in them
- *       (plus ASCII 32–255 as a baseline).</li>
+ *       (plus ASCII 32–126 as a baseline).</li>
  *   <li>If neither is given, include <b>all visible characters</b> in the font
  *       (codepoints 32–65535 that pass {@code canDisplay()}).</li>
  * </ol>

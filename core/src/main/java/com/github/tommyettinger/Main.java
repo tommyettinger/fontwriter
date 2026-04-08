@@ -201,20 +201,20 @@ public class Main extends ApplicationAdapter {
         System.out.println("  java -jar " + jar + " MyFont.otf standard 60 --lang i18n/de");
         System.out.println("    Font: MyFont.otf. Mode: standard. Size: starts at 60px.");
         System.out.println("    Charset: reads all files in i18n/de/, includes only characters");
-        System.out.println("    found there (plus ASCII 32-255 baseline).");
+        System.out.println("    found there (plus ASCII 32-126 baseline).");
         System.out.println("    Image: 2048x2048 (default). No extra color preview.");
         System.out.println();
 
         // --- Output files ---
         System.out.println("Output files (written to fonts/ and previews/ folders):");
-        System.out.println("  <name>-<mode>.png                    Font texture atlas.");
-        System.out.println("  <name>-<mode>.json                   Structured JSON font descriptor.");
-        System.out.println("  <name>-<mode>.dat                    LZB-compressed .json.");
-        System.out.println("  <name>-<mode>.ubj                    UBJSON binary (smaller than .json).");
-        System.out.println("  <name>-<mode>.json.lzma              LZMA-compressed .json.");
-        System.out.println("  <name>-<mode>.ubj.lzma               LZMA-compressed .ubj (smallest).");
-        System.out.println("  <name>-<mode>.png (preview)          Text rendering preview (always generated).");
-        System.out.println("  full-<color>-<name>-<mode>.png       Full-glyph color preview (only with --color).");
+        System.out.println("  fonts/<name>-<mode>.png                 Font texture atlas.");
+        System.out.println("  fonts/<name>-<mode>.json                Structured JSON font descriptor.");
+        System.out.println("  fonts/<name>-<mode>.dat                 LZB-compressed descriptor (not recommended).");
+        System.out.println("  fonts/<name>-<mode>.ubj                 UBJSON binary descriptor (smaller than .json).");
+        System.out.println("  fonts/<name>-<mode>.json.lzma           LZMA-compressed .json descriptor (recommended).");
+        System.out.println("  fonts/<name>-<mode>.ubj.lzma            LZMA-compressed .ubj descriptor (smallest).");
+        System.out.println("  previews/<name>-<mode>.png (preview)    Text rendering preview (always generated).");
+        System.out.println("  previews/full-<color>-<name>-<mode>.png Full-glyph color preview (only with --color).");
         System.out.println("  You only need one descriptor file (.json, .dat, .ubj, etc.).");
         System.out.println();
 
@@ -348,7 +348,7 @@ public class Main extends ApplicationAdapter {
         //
         //  1. --charset given  → use that predefined set
         //  2. --lang given     → extract chars from matched files (folder, glob, or file)
-        //                        (plus ASCII 32–255 baseline)
+        //                        (plus ASCII 32–126 baseline)
         //  3. neither given    → all visible chars (codepoints 32–65535)
         //
         //  See FontwriterConfig.resolveCharsetStrategy() for the logic.
