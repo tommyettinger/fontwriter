@@ -50,7 +50,7 @@ public class Main extends ApplicationAdapter {
     private ByteArray curLineBytes;
     private ByteArray prevLineBytes;
     private int lastLineLen;
-    private String[] args;
+    private FontwriterConfig config;
 
     private SpriteBatch batch;
 
@@ -69,60 +69,23 @@ public class Main extends ApplicationAdapter {
     String archPath, atlasGenBinary, oxipngBinary = "oxipng";
 
     public Main(String[] args) {
-        if(args == null || args.length == 0 || "-h".equals(args[0]) || "--help".equals(args[0])) {
-            System.out.println("You must pass at least the following parameters:");
-            System.out.println(" - the path to a font file (it can be TTF or OTF, and a local or absolute path),");
-            System.out.println(" - the mode to use ('msdf', 'sdf', 'mtsdf', 'psdf', or 'standard'),");
-            System.out.println(" - the initial size to try (as an int or double)");
-            System.out.println("Optionally, you can pass the following parameters after those:");
-            System.out.println(" - the image size (it must int width and int height separated by 'x')");
-            System.out.println(" - a color name or hex code, optionally in quotes to use TextraTypist color description");
-            System.out.println(" - a local or absolute path to a folder containing I18N files to determine what chars to use.");
-            System.out.println("   - these files start with 'lang_' or have the extension '.properties'.");
-            System.out.println("If the image size is absent, the default is 2048x2048.");
-            System.out.println("If the color name is absent or malformed, the default won't write an extra preview.");
-            System.out.println("If the I18N path is absent, the default is the same folder as the font file.");
-            System.out.println("This means if any files start with 'lang_' or have the extension '.properties' and are");
-            System.out.println("in the same folder as your font file, they will be used to determine the char set,");
-            System.out.println("unless you specify a different folder or use a different path for the font file.");
-            System.out.println("If no I18N files are present, this will use all chars present in the font.");
-            System.out.println();
-            System.out.println("For example, you could use this full command:");
-            System.out.println("java -jar " + JAR_NAME + " Gentium.ttf standard 63");
-            System.out.println("or this one:");
-            System.out.println("java -jar " + JAR_NAME + " \"Ostrich Black.ttf\" standard 425 2048x2048 \"dark dullest violet-blue\" \"i18n/pt_BR\"");
-            System.out.println();
-            System.out.println("Both will write the complete contents of the font, at different font sizes, and");
-            System.out.println("the second command will write an extra preview of all glyphs with dark blue text.");
-            System.out.println("The second command also loads a subset of chars to use for the font from the folder");
-            System.out.println("i18n/pt_BR/ (local or absolute; local in this case), looking for any files with file");
-            System.out.println("names starting with 'lang_' or with the extension '.properties' .");
-            System.out.println("This writes a .png font texture, a .json file describing that texture as a font, a");
-            System.out.println(".dat file that is a somewhat-compressed version of the .json file, a .ubj file that");
-            System.out.println("is a smaller binary form of JSON, and .lzma compressed versions of the .json and .ubj");
-            System.out.println("files with the .json.lzma and .ubj.lzma extensions. You only need one of the .json,");
-            System.out.println(".dat, .ubj, .ubj.lzma, or .json.lzma files, depending on what you use to load the font.");
-            System.out.println("The .ubj.lzma files are smallest, but .ubj doesn't work on GWT in libGDX 1.13.1 and older.");
-            System.out.println("The .json.lzma files are almost as small, and work everywhere.");
-            System.out.println();
-            System.out.println("As an alternative, you can enter some special-use commands that use a different syntax.");
-            System.out.println("The command:");
-            System.out.println("java -jar " + JAR_NAME + " --bulk ttfs");
-            System.out.println("will run the program on every .otf or .ttf font in the folder 'ttfs'; you can");
-            System.out.println("omit the folder, which makes this default to the 'input' folder.");
-            System.out.println("The command:");
-            System.out.println("java -jar " + JAR_NAME + " --ubj jsonFonts");
-            System.out.println("will not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
-            System.out.println("and make copies of them in the smaller binary .ubj format. It also makes compressed .ubj fonts");
-            System.out.println("with the .ubj.lzma extension. If you omit a folder name like 'jsonFonts', this defaults to 'fonts'.");
-            System.out.println("The command:");
-            System.out.println("java -jar " + JAR_NAME + " --lzma jsonFonts");
-            System.out.println("will also not generate any new font images, but will take any .json fonts in the 'jsonFonts' folder");
-            System.out.println("and make copies of them compressed with LZMA, using the .json.lzma extension. If you omit a folder");
-            System.out.println("name like 'jsonFonts', this defaults to 'fonts'.");
+        try {
+            this.config = ConfigParser.parse(args);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error: " + e.getMessage());
             System.exit(1);
         }
-        this.args = args;
+
+        if (config.helpRequested) {
+            printHelp();
+            System.exit(0);
+        }
+
+        if (config.versionRequested) {
+            System.out.println("fontwriter " + JAR_NAME.replace("fontwriter-", "").replace(".jar", ""));
+            System.exit(0);
+        }
+
         switch (SharedLibraryLoader.os){
             case Windows: archPath = "distbin/win-x64/";
                 atlasGenBinary = "msdf-atlas-gen.exe";
@@ -139,71 +102,142 @@ public class Main extends ApplicationAdapter {
         }
 
     }
+
+    private void printHelp() {
+        String jar = JAR_NAME;
+        System.out.println("Usage: java -jar " + jar + " <font> <mode> <size> [options]");
+        System.out.println();
+        System.out.println("Generate bitmap fonts for libGDX / TextraTypist.");
+        System.out.println();
+
+        // --- Required arguments ---
+        System.out.println("Required arguments:");
+        System.out.println("  <font>     Path to a .ttf or .otf font file (local or absolute).");
+        System.out.println();
+        System.out.println("  <mode>     Rendering mode. One of:");
+        System.out.println("               standard  — non-distance-field bitmap. Scales down well.");
+        System.out.println("                           Works everywhere including BitmapFont. (recommended)");
+        System.out.println("               sdf       — signed distance field. Scales up nicely, supports");
+        System.out.println("                           outline effects. Good middle ground.");
+        System.out.println("               msdf      — multichannel SDF. Best upscaling quality, but");
+        System.out.println("                           looks odd with colorful emoji.");
+        System.out.println("               mtsdf     — multi-channel + true SDF hybrid.");
+        System.out.println("               psdf      — pseudo SDF.");
+        System.out.println();
+        System.out.println("  <size>     Initial font size to try, in pixels (integer or decimal).");
+        System.out.println("             Recommended: 60 for most fonts. Use 200-280 for sharper");
+        System.out.println("             results (needs more atlas space). Large charsets (CJK) may");
+        System.out.println("             need 30-55 to fit within the atlas dimensions.");
+        System.out.println("             If too large, the generator retries with smaller sizes.");
+        System.out.println();
+
+        // --- Options ---
+        System.out.println("Options (can be given in any order after the required arguments):");
+        System.out.println();
+        System.out.println("  --image-size WxH   Output image dimensions.");
+        System.out.println("                     Default: 2048x2048 (or 4096x4096 for 30000+ chars).");
+        System.out.println("                     Deprecated legacy shorthand: -s");
+        System.out.println();
+        System.out.println("  --color COLOR      Generate an extra full-glyph preview with the given");
+        System.out.println("                     text color. Accepts named colors ('black',");
+        System.out.println("                     'dark dullest violet-blue') or hex ('#E74200').");
+        System.out.println("                     Deprecated legacy shorthand: -c");
+        System.out.println();
+        System.out.println("  --charset NAME     Use a predefined character set instead of including");
+        System.out.println("                     every character in the font. Available sets:");
+        System.out.println("                       ascii     — Basic ASCII (32-126). English only.");
+        System.out.println("                       latin     — ASCII + Latin-1 + Latin Extended-A.");
+        System.out.println("                                   Western/Central/Eastern European.");
+        System.out.println("                       latin-ext — Latin + Extended-B + Additional.");
+        System.out.println("                                   Vietnamese, Welsh, rare romanizations.");
+        System.out.println("                       cyrillic  — Latin + Cyrillic. Russian, Ukrainian, etc.");
+        System.out.println("                       greek     — Latin + Greek.");
+        System.out.println("                       all       — Every character in the font (32-65535).");
+        System.out.println("                     Default: 'all' (every visible character in the font).");
+        System.out.println("                     Can be overridden with a specific set, or replaced");
+        System.out.println("                     entirely by using --lang instead (see below).");
+        System.out.println();
+        System.out.println("  --lang PATH        I18N source for character extraction. Accepts:");
+        System.out.println("                       Folder:  --lang i18n/de");
+        System.out.println("                         Reads all files in that folder.");
+        System.out.println("                       Pattern: --lang \"i18n/*.txt\" or --lang \"i18n/strings_*\"");
+        System.out.println("                         Matches files against the glob (* and ? wildcards).");
+        System.out.println("                       File:    --lang i18n/de/strings.properties");
+        System.out.println("                         Reads that single file.");
+        System.out.println("                     Characters found (plus ASCII 32-255 baseline) determine");
+        System.out.println("                     which glyphs to include. Only active when explicitly passed.");
+        System.out.println("                     Deprecated legacy shorthand: -l");
+        System.out.println();
+        System.out.println("  --help             Show this help message and exit.");
+        System.out.println("  --version          Show version and exit.");
+        System.out.println();
+
+        // --- Character set fallback hierarchy ---
+        System.out.println("Character set resolution (first match wins):");
+        System.out.println("  1. --charset given  -> use that predefined set.");
+        System.out.println("  2. --lang given     -> extract chars from matched files (folder, glob, or file).");
+        System.out.println("  3. neither given    -> include ALL visible characters in the font.");
+        System.out.println("  If --charset and --lang are both given, --charset takes priority.");
+        System.out.println();
+
+        // --- Examples with explanations ---
+        System.out.println("Examples:");
+        System.out.println();
+        System.out.println("  java -jar " + jar + " Gentium.ttf standard 60");
+        System.out.println("    Font: Gentium.ttf (relative path). Mode: standard (bitmap, no SDF).");
+        System.out.println("    Size: starts at 60px. Charset: all visible chars (no --charset/--lang).");
+        System.out.println("    Image: 2048x2048 (default). No extra color preview.");
+        System.out.println();
+        System.out.println("  java -jar " + jar + " MyFont.otf msdf 200 --image-size 4096x4096");
+        System.out.println("    Font: MyFont.otf. Mode: msdf (best upscaling). Size: starts at 200px.");
+        System.out.println("    Charset: all visible chars. Image: 4096x4096 (explicit).");
+        System.out.println("    No extra color preview.");
+        System.out.println();
+        System.out.println("  java -jar " + jar + " MyFont.otf sdf 60 --charset latin --color black");
+        System.out.println("    Font: MyFont.otf. Mode: sdf. Size: starts at 60px.");
+        System.out.println("    Charset: latin (ASCII + Latin-1 + Latin Extended-A) via --charset.");
+        System.out.println("    Image: 2048x2048 (default). Extra color preview in black.");
+        System.out.println();
+        System.out.println("  java -jar " + jar + " MyFont.otf standard 60 --lang i18n/de");
+        System.out.println("    Font: MyFont.otf. Mode: standard. Size: starts at 60px.");
+        System.out.println("    Charset: reads all files in i18n/de/, includes only characters");
+        System.out.println("    found there (plus ASCII 32-255 baseline).");
+        System.out.println("    Image: 2048x2048 (default). No extra color preview.");
+        System.out.println();
+
+        // --- Output files ---
+        System.out.println("Output files (written to fonts/ and previews/ folders):");
+        System.out.println("  <name>-<mode>.png                    Font texture atlas.");
+        System.out.println("  <name>-<mode>.json                   Structured JSON font descriptor.");
+        System.out.println("  <name>-<mode>.dat                    LZB-compressed .json.");
+        System.out.println("  <name>-<mode>.ubj                    UBJSON binary (smaller than .json).");
+        System.out.println("  <name>-<mode>.json.lzma              LZMA-compressed .json.");
+        System.out.println("  <name>-<mode>.ubj.lzma               LZMA-compressed .ubj (smallest).");
+        System.out.println("  <name>-<mode>.png (preview)          Text rendering preview (always generated).");
+        System.out.println("  full-<color>-<name>-<mode>.png       Full-glyph color preview (only with --color).");
+        System.out.println("  You only need one descriptor file (.json, .dat, .ubj, etc.).");
+        System.out.println();
+
+        // --- Legacy positional syntax ---
+        System.out.println("Legacy positional syntax (DEPRECATED — will be removed in a future version):");
+        System.out.println("  java -jar " + jar + " <font> <mode> <size> [WxH] [color] [langPath]");
+        System.out.println();
+
+        // --- Special commands ---
+        System.out.println("Special commands:");
+        System.out.println("  --bulk [folder]      Process every .ttf/.otf in folder (default: 'input').");
+        System.out.println("  --preview [folder]   Generate previews for .json fonts (default: 'fonts').");
+        System.out.println("  --ubj [folder]       Convert .json fonts to .ubj + .ubj.lzma (default: 'fonts').");
+        System.out.println("  --lzma [folder]      Compress .json fonts with LZMA (default: 'fonts').");
+    }
     @Override
     public void create() {
         batch = new SpriteBatch();
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
 
-        if("--bulk".equals(args[0])){
-            String inPath = "input";
-            if(args.length > 1){
-                inPath = args[1];
-            }
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                    (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
-            String[] fields = {"standard", "sdf", "msdf"};
-            args = new String[]{"filename", "field", "280", "2048x2048", "black"};
-            for(FileHandle file : files){
-                args[0] = file.path();
-                if(file.name().startsWith("Go-Noto")) {
-                    args[2] = "30";
-                    args[3] = "4096x4096";
-                }
-                else {
-                    args[2] = "280";
-                    args[3] = "2048x2048";
-                }
-                for(String field : fields) {
-                    args[1] = field;
-                    mainProcess();
-                }
-            }
-        } else if("--preview".equals(args[0])) {
-            String inPath = "fonts";
-            if(args.length > 1){
-                inPath = args[1];
-            }
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                    (dir, name) -> name.endsWith("json"));
-            args = new String[]{"filename", "field"};
-            for(FileHandle file : files) {
-                args[0] = file.path().substring(0, file.path().lastIndexOf('-'));
-                args[1] = file.nameWithoutExtension().substring(file.nameWithoutExtension().lastIndexOf('-') + 1);
-
-                String fontFileName = args[0], fontName = fontFileName.substring(Math.max(fontFileName.lastIndexOf('/'), fontFileName.lastIndexOf('\\')) + 1);
-                makePreview(inPath + "/", fontName);
-            }
-        } else if("--ubj".equals(args[0])) {
-            String inPath = "fonts";
-            if(args.length > 1){
-                inPath = args[1];
-            }
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                (dir, name) -> name.endsWith("json"));
-            for(FileHandle file : files) {
-                convertToUBJSON(file);
-            }
-        } else if("--lzma".equals(args[0])) {
-            String inPath = "fonts";
-            if(args.length > 1){
-                inPath = args[1];
-            }
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                (dir, name) -> name.endsWith("json"));
-            for(FileHandle file : files) {
-                convertToLzma(file);
-            }
+        if (config.specialCommand != null) {
+            runSpecialCommand();
         } else {
             mainProcess();
         }
@@ -211,8 +245,96 @@ public class Main extends ApplicationAdapter {
         Gdx.app.exit();
     }
 
+    private void runSpecialCommand() {
+        String command = config.specialCommand;
+
+        if ("bulk".equals(command)) {
+            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "input";
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                    (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
+            FontwriterConfig.Mode[] fields = {FontwriterConfig.Mode.STANDARD, FontwriterConfig.Mode.SDF, FontwriterConfig.Mode.MSDF};
+            for (FileHandle file : files) {
+                for (FontwriterConfig.Mode field : fields) {
+                    FontwriterConfig bulkConfig = new FontwriterConfig();
+                    bulkConfig.fontPath = file.path();
+                    bulkConfig.mode = field;
+                    if (file.name().startsWith("Go-Noto")) {
+                        bulkConfig.initialSize = "30";
+                        bulkConfig.imageSize = "4096x4096";
+                    } else {
+                        bulkConfig.initialSize = "280";
+                        bulkConfig.imageSize = "2048x2048";
+                    }
+                    bulkConfig.color = "black";
+                    this.config = bulkConfig;
+                    mainProcess();
+                }
+            }
+        } else if ("preview".equals(command)) {
+            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "fonts";
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                    (dir, name) -> name.endsWith("json"));
+            for (FileHandle file : files) {
+                String filePath = file.path().substring(0, file.path().lastIndexOf('-'));
+                String fileMode = file.nameWithoutExtension().substring(file.nameWithoutExtension().lastIndexOf('-') + 1);
+                String fontName = filePath.substring(Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\')) + 1);
+
+                FontwriterConfig previewConfig = new FontwriterConfig();
+                previewConfig.fontPath = filePath;
+                previewConfig.mode = FontwriterConfig.Mode.fromString(fileMode);
+                this.config = previewConfig;
+                makePreview(inPath + "/", fontName);
+            }
+        } else if ("ubj".equals(command)) {
+            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "fonts";
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                    (dir, name) -> name.endsWith("json"));
+            for (FileHandle file : files) {
+                convertToUBJSON(file);
+            }
+        } else if ("lzma".equals(command)) {
+            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "fonts";
+            FileHandle[] files = Gdx.files.local(inPath).list(
+                    (dir, name) -> name.endsWith("json"));
+            for (FileHandle file : files) {
+                convertToLzma(file);
+            }
+        }
+    }
+
+    /**
+     * Verifies that an external binary exists and is executable before
+     * attempting to run it. Prints a descriptive error message and exits
+     * if the binary is missing or not executable.
+     *
+     * @param binaryPath the relative path to the binary (e.g. "distbin/mac-arm64/msdf-atlas-gen")
+     * @param binaryName a human-readable name for error messages (e.g. "msdf-atlas-gen")
+     */
+    private void verifyBinary(String binaryPath, String binaryName) {
+        File binaryFile = new File(Gdx.files.getLocalStoragePath(), binaryPath);
+        if (!binaryFile.exists()) {
+            System.err.println("Error: " + binaryName + " not found at: " + binaryFile.getAbsolutePath());
+            System.err.println("Make sure the fontwriter distribution is fully extracted and the distbin/ folder");
+            System.err.println("is present alongside the JAR file.");
+            System.exit(1);
+        }
+        if (!binaryFile.canExecute()) {
+            System.err.println("Error: " + binaryName + " exists but is not executable: " + binaryFile.getAbsolutePath());
+            if (SharedLibraryLoader.os == Os.MacOsX) {
+                System.err.println("On macOS, you may need to:");
+                System.err.println("  1. Run: chmod +x " + binaryPath);
+                System.err.println("  2. Allow the binary in System Settings -> Privacy & Security -> Allow");
+                System.err.println("     (macOS may block unsigned binaries on first run)");
+            } else if (SharedLibraryLoader.os == Os.Linux) {
+                System.err.println("On Linux, run: chmod +x " + binaryPath);
+            }
+            System.exit(1);
+        }
+    }
+
     public void mainProcess() {
-        String fontFileName = args[0];
+        String fontFileName = config.fontPath;
+        FontwriterConfig.Mode mode = config.mode;
         FileHandle fontHandle = Gdx.files.absolute(fontFileName);
         if (!fontHandle.exists()) {
             fontHandle = Gdx.files.local(fontFileName);
@@ -220,29 +342,36 @@ public class Main extends ApplicationAdapter {
         String fontName = fontHandle.nameWithoutExtension();
         FileHandle cmap = fontHandle.sibling(fontHandle.name() + ".cmap.txt");
         int cmapLength;
-        System.out.println("Building character map from ASCII + translation files...");
 
+        // ---------------------------------------------------------------
+        //  Character set resolution — fallback hierarchy:
+        //
+        //  1. --charset given  → use that predefined set
+        //  2. --lang given     → extract chars from matched files (folder, glob, or file)
+        //                        (plus ASCII 32–255 baseline)
+        //  3. neither given    → all visible chars (codepoints 32–65535)
+        //
+        //  See FontwriterConfig.resolveCharsetStrategy() for the logic.
+        // ---------------------------------------------------------------
+        FontwriterConfig.CharsetStrategy charsetStrategy = config.resolveCharsetStrategy();
         IntSet charSet = new IntSet(65536);
 
-        // All ASCII + extended ASCII (32–255)
-        for (int i = 32; i <= 255; i++) {
-            charSet.add(i);
-        }
+        if (charsetStrategy == FontwriterConfig.CharsetStrategy.PRESET) {
+            System.out.println("Building character map from predefined charset: " + config.charset + "...");
+            populateCharset(charSet, config.charset);
+        } else if (charsetStrategy == FontwriterConfig.CharsetStrategy.LANG) {
+            System.out.println("Building character map from I18N source: " + config.langPath + "...");
+            // Baseline: ASCII + extended ASCII (32–255)
+            for (int i = 32; i <= 255; i++) {
+                charSet.add(i);
+            }
 
-        // Collect every char from files named lang_* or *.properties in the same folder as the .ttf, or a path if
-        // given as the sixth argument (after the full preview color).
-        FileHandle fontDir;
-        if(args.length > 5){
-            fontDir = Gdx.files.absolute(args[5]);
-            if(!fontDir.exists()) fontDir = Gdx.files.local((args[5]));
-            if(!fontDir.exists()) fontDir = fontHandle.parent();
-        } else {
-            fontDir = fontHandle.parent();
-        }
-        if (fontDir != null) {
-            FileHandle[] langFiles =
-                fontDir.list((d, name) -> name.toLowerCase(Locale.ROOT).startsWith("lang_")
-                    || name.toLowerCase(Locale.ROOT).endsWith(".properties"));
+            // --lang accepts three forms:
+            //   1. Glob pattern  — contains * or ? → match files against the pattern
+            //   2. Single file   — path points to an existing file → read that one file
+            //   3. Folder        — path points to a directory → read all files in it
+            FileHandle[] langFiles = resolveLangFiles(config.langPath);
+
             if (langFiles != null && langFiles.length > 0) {
                 for (FileHandle f : langFiles) {
                     try {
@@ -250,15 +379,25 @@ public class Main extends ApplicationAdapter {
                         for (int i = 0; i < content.length(); i++) {
                             charSet.add(content.charAt(i));
                         }
+                        System.out.println("  Read " + f.path() + " (" + content.length() + " chars)");
                     } catch (Exception e) {
                         System.err.println("Failed to read " + f.path() + ": " + e.getMessage());
                     }
                 }
+                System.out.println("  Unique characters found: " + charSet.size);
             } else {
-                // no lang_ or .properties files; create full character map.
-                for (int i = 32; i < 65536; i++) {
-                    charSet.add(i);
-                }
+                System.err.println("Error: --lang '" + config.langPath + "' matched no files.");
+                System.err.println("Check that the path exists and contains readable files.");
+                System.err.println("  Folder:  --lang i18n/de            (reads all files in the folder)");
+                System.err.println("  Pattern: --lang \"i18n/*.txt\"        (glob with * or ? wildcards)");
+                System.err.println("  File:    --lang i18n/strings.properties");
+                System.exit(1);
+            }
+        } else {
+            // "all" — no --charset, no --lang: include every character in the font.
+            System.out.println("Building character map from all visible characters in the font...");
+            for (int i = 32; i < 65536; i++) {
+                charSet.add(i);
             }
         }
 
@@ -272,7 +411,7 @@ public class Main extends ApplicationAdapter {
         // If there are a lot of chars, don't report every one that this can't display.
         boolean reasonableCharMap = charSet.size < 10000;
         try {
-            java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(args[0]));
+            java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(fontFileName));
             IntSet.IntSetIterator iter = charSet.iterator();
             while (iter.hasNext) {
                 int code = iter.next();
@@ -307,19 +446,17 @@ public class Main extends ApplicationAdapter {
 
         cmap.writeString(sb.toString(), false, "UTF-8");
         cmapLength = sb.length();
-        long size = Math.round(Double.parseDouble(args[2]));
+        long size = Math.round(Double.parseDouble(config.initialSize));
         size = Math.min(cmapLength >= 30000 ? 55 : 280, size);
-        String imageSize = args.length > 3 ? args[3].replace('x', ' ') : (cmapLength >= 30000 ? "4096 4096" : "2048 2048");
-        boolean fullPreview = args.length > 4;
+        String imageSize = config.resolveImageSize(cmapLength);
+        boolean fullPreview = config.hasPreviewColor();
         int fullPreviewColor;
-        if (fullPreview && args[4].length() > 1)
-            fullPreviewColor = stringToColor(args[4].replaceAll("['\"]", ""));
+        if (fullPreview)
+            fullPreviewColor = stringToColor(config.color);
         else {
             fullPreviewColor = -1;
-            fullPreview = false;
         }
         System.out.println("Generating structured JSON font and PNG using msdf-atlas-gen...");
-        //distbin/win-x64/msdf-atlas-gen.exe -font "input/Gentium.ttf" -charset "input/Gentium.ttf.cmap.txt" -type sdf -imageout "out/fonts/Gentium-sdf.png" -json "out/fonts/Gentium-sdf.json" -pxrange 59 -dimensions 2048 2048 -size 59 -outerpxpadding 1
         List<String> commandList = new ArrayList<>();
         commandList.add(archPath + atlasGenBinary);
         commandList.add("-font");
@@ -327,13 +464,13 @@ public class Main extends ApplicationAdapter {
         commandList.add("-charset");
         commandList.add(fontFileName + ".cmap.txt");
         commandList.add("-type");
-        commandList.add("standard".equals(args[1]) ? "softmask" : args[1]);
+        commandList.add(mode.atlasGenType);
         commandList.add("-imageout");
-        commandList.add("fonts/" + fontName + "-" + args[1] + ".png");
+        commandList.add("fonts/" + fontName + "-" + mode + ".png");
         commandList.add("-json");
-        commandList.add("fonts/" + fontName + "-" + args[1] + ".json");
+        commandList.add("fonts/" + fontName + "-" + mode + ".json");
         commandList.add("-pxrange");
-        commandList.add(String.valueOf("sdf".equals(args[1]) ? size * 0.15f : size * 0.09f));
+        commandList.add(String.valueOf(mode == FontwriterConfig.Mode.SDF ? size * 0.15f : size * 0.09f));
         commandList.add("-dimensions");
         String[] dims = imageSize.trim().split("[x ]+");
         commandList.add(dims[0]);
@@ -343,6 +480,8 @@ public class Main extends ApplicationAdapter {
         commandList.add("-outerpxpadding");
         commandList.add("1");
 
+        verifyBinary(archPath + atlasGenBinary, "msdf-atlas-gen");
+
         ProcessBuilder builder = new ProcessBuilder(commandList);
         System.out.println("Running command: " + String.join(" ", builder.command()));
 
@@ -351,48 +490,57 @@ public class Main extends ApplicationAdapter {
         while (true) {
             try {
                 commandList.set(commandList.size() - 3, String.valueOf(size));
-//                commandList.set(commandList.size()-8, String.valueOf(size * 0.08f));
-                commandList.set(commandList.size() - 8, "sdf".equals(args[1]) ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
+                commandList.set(commandList.size() - 8, mode == FontwriterConfig.Mode.SDF ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
                 builder.command(commandList);
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
+                    long failedSize = size;
                     if (--size <= 0) {
-                        System.out.println("msdf-atlas-gen failed, returning exit code " + exitCode + "; terminating.");
+                        System.err.println("Error: msdf-atlas-gen could not fit glyphs into the atlas at any size "
+                                + "(last attempted: " + failedSize + "). Terminating.");
                         System.exit(exitCode);
                         break;
                     }
-                    if (size % 10 == 9) {
-                        System.out.println("Sizes down to " + (size + 1) + " have been too large.");
-                    }
+                    System.out.println("Warning: Could not fit all glyphs into the atlas using font size "
+                            + failedSize + ". Retrying with font size " + size + "...");
                 } else {
-                    System.out.println("Using size " + size + ".");
+                    System.out.println("Successfully generated atlas using font size " + size + ".");
                     break;
                 }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+            } catch (IOException e) {
+                System.err.println("Error: Failed to run msdf-atlas-gen: " + e.getMessage());
+                if (SharedLibraryLoader.os == Os.MacOsX) {
+                    System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
+                    System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
+                }
+                System.exit(1);
+                break;
+            } catch (InterruptedException e) {
+                System.err.println("Error: msdf-atlas-gen was interrupted: " + e.getMessage());
                 System.exit(1);
                 break;
             }
         }
 
         System.out.println("Compressing .JSON file (optional)...");
-        FileHandle jsonHandle = Gdx.files.local("fonts/" + fontName + "-" + args[1] + ".json");
+        FileHandle jsonHandle = Gdx.files.local("fonts/" + fontName + "-" + mode + ".json");
         convertToUBJSON(jsonHandle);
         convertToLzma(jsonHandle);
         ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
-        Gdx.files.local("fonts/" + fontName + "-" + args[1] + ".dat").writeBytes(ba.items, 0, ba.size, false);
+        Gdx.files.local("fonts/" + fontName + "-" + mode + ".dat").writeBytes(ba.items, 0, ba.size, false);
 
         System.out.println("Applying changes for improved TextraTypist usage...");
-        FileHandle imageFile = Gdx.files.local("fonts/" + fontName + "-" + args[1] + ".png");
+        FileHandle imageFile = Gdx.files.local("fonts/" + fontName + "-" + mode + ".png");
         FileHandle fullPreviewFile = imageFile;
         if (fullPreview) {
-            fullPreviewFile = Gdx.files.local("previews/full-" + args[4] + "-" + fontName + "-" + args[1] + ".png");
+            fullPreviewFile = Gdx.files.local("previews/full-" + config.color + "-" + fontName + "-" + mode + ".png");
             imageFile.copyTo(fullPreviewFile);
             process(fullPreviewFile, fullPreviewColor);
         }
         process(imageFile);
 
         System.out.println("Optimizing result with oxipng...");
+        verifyBinary(archPath + oxipngBinary, "oxipng");
 
         List<String> oxiCmd = new ArrayList<>();
         oxiCmd.add(archPath + oxipngBinary);
@@ -411,8 +559,15 @@ public class Main extends ApplicationAdapter {
                 System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
                 System.exit(exitCode);
             }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Error: Failed to run oxipng: " + e.getMessage());
+            if (SharedLibraryLoader.os == Os.MacOsX) {
+                System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
+                System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
+            }
+            System.exit(1);
+        } catch (InterruptedException e) {
+            System.err.println("Error: oxipng was interrupted: " + e.getMessage());
             System.exit(1);
         }
         if (fullPreview) {
@@ -425,28 +580,200 @@ public class Main extends ApplicationAdapter {
                     System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
                     System.exit(exitCode);
                 }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+            } catch (IOException e) {
+                System.err.println("Error: Failed to run oxipng: " + e.getMessage());
+                if (SharedLibraryLoader.os == Os.MacOsX) {
+                    System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
+                    System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
+                }
+                System.exit(1);
+            } catch (InterruptedException e) {
+                System.err.println("Error: oxipng was interrupted: " + e.getMessage());
                 System.exit(1);
             }
 
         }
         makePreview("fonts/", fontName);
+
+        // --- Summary: list all generated files with full paths ---
+        System.out.println();
+        System.out.println("Done! Generated files:");
+        String basePath = "fonts/" + fontName + "-" + mode;
+        String[] extensions = {".png", ".json", ".dat", ".ubj", ".json.lzma", ".ubj.lzma"};
+        for (String ext : extensions) {
+            FileHandle f = Gdx.files.local(basePath + ext);
+            if (f.exists()) {
+                System.out.println("  " + f.file().getAbsolutePath());
+            }
+        }
+        FileHandle previewFile = Gdx.files.local("previews/" + fontName + "-" + mode + ".png");
+        if (previewFile.exists()) {
+            System.out.println("  " + previewFile.file().getAbsolutePath());
+        }
+        if (fullPreview) {
+            FileHandle colorPreview = Gdx.files.local("previews/full-" + config.color + "-" + fontName + "-" + mode + ".png");
+            if (colorPreview.exists()) {
+                System.out.println("  " + colorPreview.file().getAbsolutePath());
+            }
+        }
+    }
+
+    /**
+     * Resolves the --lang value into an array of files to read.
+     * Three modes are supported:
+     * <ol>
+     *   <li><b>Glob pattern</b> (contains {@code *} or {@code ?}):
+     *       The parent directory is listed and filenames are matched
+     *       against the glob portion. Example: {@code "i18n/*.txt"},
+     *       {@code "i18n/*"}.</li>
+     *   <li><b>Single file</b> (path points to an existing file):
+     *       Returns an array with just that one file.</li>
+     *   <li><b>Folder</b> (path points to an existing directory):
+     *       Reads all files in that directory (excluding hidden
+     *       dot-files). Equivalent to passing the folder with "/*".</li>
+     * </ol>
+     *
+     * @param langPath the raw --lang value from the user
+     * @return matched files, or null/empty if nothing was found
+     */
+    private FileHandle[] resolveLangFiles(String langPath) {
+        // --- Mode 1: Glob pattern (contains * or ?) ---
+        if (langPath.contains("*") || langPath.contains("?")) {
+            // Split into parent directory + filename pattern.
+            // e.g. "i18n/*.txt" → parent="i18n", pattern="*.txt"
+            // e.g. "i18n/*"          → parent="i18n", pattern="*"
+            int lastSep = Math.max(langPath.lastIndexOf('/'), langPath.lastIndexOf('\\'));
+            String parentPath;
+            String globPattern;
+            if (lastSep >= 0) {
+                parentPath = langPath.substring(0, lastSep);
+                globPattern = langPath.substring(lastSep + 1);
+            } else {
+                parentPath = ".";
+                globPattern = langPath;
+            }
+
+            FileHandle parentDir = Gdx.files.absolute(parentPath);
+            if (!parentDir.exists()) parentDir = Gdx.files.local(parentPath);
+            if (!parentDir.exists() || !parentDir.isDirectory()) {
+                System.err.println("Error: parent directory '" + parentPath + "' does not exist.");
+                return null;
+            }
+
+            // Convert glob to regex: escape dots, * → .*, ? → .
+            final String regex = "^" + globPattern
+                    .replace(".", "\\.")
+                    .replace("*", ".*")
+                    .replace("?", ".")
+                    + "$";
+
+            FileHandle[] matched = parentDir.list((d, name) -> name.matches(regex));
+            if (matched == null || matched.length == 0) {
+                System.err.println("Error: no files matched pattern '" + globPattern
+                        + "' in '" + parentDir.path() + "'.");
+            } else {
+                System.out.println("  Matched " + matched.length + " file(s) from pattern '" + langPath + "'.");
+            }
+            return matched;
+        }
+
+        // --- Mode 2 & 3: resolve as absolute or local path ---
+        FileHandle resolved = Gdx.files.absolute(langPath);
+        if (!resolved.exists()) resolved = Gdx.files.local(langPath);
+
+        if (!resolved.exists()) {
+            System.err.println("Error: --lang path '" + langPath + "' does not exist.");
+            return null;
+        }
+
+        // --- Mode 2: Single file ---
+        if (!resolved.isDirectory()) {
+            System.out.println("  Using single file: " + resolved.path());
+            return new FileHandle[]{resolved};
+        }
+
+        // --- Mode 3: Folder — read all files in the directory ---
+        FileHandle[] langFiles = resolved.list((d, name) -> !name.startsWith("."));
+        if (langFiles == null || langFiles.length == 0) {
+            System.err.println("Error: no files found in folder '" + langPath + "'.");
+        } else {
+            System.out.println("  Found " + langFiles.length + " file(s) in folder '" + langPath + "'.");
+        }
+        return langFiles;
+    }
+
+    /**
+     * Populates the given IntSet with codepoints for a predefined charset.
+     * Every set includes ASCII 32–126 as a baseline.
+     *
+     * @param charSet the set to populate (not cleared first)
+     * @param charset the predefined charset to apply
+     */
+    private static void populateCharset(IntSet charSet, FontwriterConfig.Charset charset) {
+        // ASCII baseline (32–126) — always included
+        for (int i = 32; i <= 126; i++) {
+            charSet.add(i);
+        }
+
+        switch (charset) {
+            case ASCII:
+                // Already done above
+                break;
+
+            case LATIN:
+                // Latin-1 Supplement (160–255) + Latin Extended-A (256–383)
+                for (int i = 160; i <= 383; i++) {
+                    charSet.add(i);
+                }
+                break;
+
+            case LATIN_EXT:
+                // Latin-1 Supplement (160–255) + Latin Extended-A (256–383)
+                // + Latin Extended-B (384–591) + Latin Extended Additional (7680–7935)
+                for (int i = 160; i <= 591; i++) {
+                    charSet.add(i);
+                }
+                for (int i = 7680; i <= 7935; i++) {
+                    charSet.add(i);
+                }
+                break;
+
+            case CYRILLIC:
+                // Latin (160–383) + Cyrillic (1024–1279)
+                for (int i = 160; i <= 383; i++) {
+                    charSet.add(i);
+                }
+                for (int i = 1024; i <= 1279; i++) {
+                    charSet.add(i);
+                }
+                break;
+
+            case GREEK:
+                // Latin (160–383) + Greek and Coptic (880–1023)
+                for (int i = 160; i <= 383; i++) {
+                    charSet.add(i);
+                }
+                for (int i = 880; i <= 1023; i++) {
+                    charSet.add(i);
+                }
+                break;
+
+            case ALL:
+            default:
+                for (int i = 32; i < 65536; i++) {
+                    charSet.add(i);
+                }
+                break;
+        }
     }
 
     private void makePreview(String inPath, String fontName) {
-        System.out.println("Creating a preview for " + fontName + "-" + args[1] + "...");
-        Texture fontTexture = new Texture(inPath+fontName+"-"+args[1]+".png");
-        Font font = new Font(inPath+fontName+"-"+args[1]+".json",
+        FontwriterConfig.Mode mode = config.mode;
+        System.out.println("Creating a preview for " + fontName + "-" + mode + "...");
+        Texture fontTexture = new Texture(inPath+fontName+"-"+mode+".png");
+        Font font = new Font(inPath+fontName+"-"+mode+".json",
                 new TextureRegion(fontTexture), 0f, 0f, 0f, 0f,
-//            fontTexture.getHeight() >= 1024
-            true
-            , true);
-//        font.setTextureFilter();
-//        if(args[1].startsWith("m"))
-//            font.setCrispness(2f); // msdf or mtsdf
-//        else
-//        font.setCrispness(1f);
+                true, true);
         if(fontTexture.getWidth() >= 1024 && fontTexture.getHeight() >= 1024)
             font.scaleHeightTo(32f);
         else
@@ -475,7 +802,7 @@ public class Main extends ApplicationAdapter {
         Gdx.gl.glReadPixels(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), GL20.GL_RGB, GL20.GL_UNSIGNED_BYTE, pixels);
         // End Pixmap.createFromFrameBuffer() modified code
 
-        FileHandle previewFile = Gdx.files.local("previews/" + fontName+"-"+args[1] + ".png");
+        FileHandle previewFile = Gdx.files.local("previews/" + fontName+"-"+mode + ".png");
         PixmapIO.writePNG(previewFile, pm, 0, true);
 
         List<String> oxiCmd = new ArrayList<>();
@@ -486,16 +813,29 @@ public class Main extends ApplicationAdapter {
         oxiCmd.add("-s");
         oxiCmd.add(previewFile.path());
 
+        // Verify oxipng binary — this method is also called from --preview,
+        // which does not go through mainProcess(), so we must check here.
+        verifyBinary(archPath + oxipngBinary, "oxipng");
+
         ProcessBuilder builder = new ProcessBuilder(oxiCmd);
+        builder.directory(new File(Gdx.files.getLocalStoragePath()));
+        builder.inheritIO();
         System.out.println("Running command: " + String.join(" ", builder.command()));
         try {
             int exitCode = builder.start().waitFor();
-            if(exitCode != 0) {
+            if (exitCode != 0) {
                 System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
                 System.exit(exitCode);
             }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Error: Failed to run oxipng: " + e.getMessage());
+            if (SharedLibraryLoader.os == Os.MacOsX) {
+                System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
+                System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
+            }
+            System.exit(1);
+        } catch (InterruptedException e) {
+            System.err.println("Error: oxipng was interrupted: " + e.getMessage());
             System.exit(1);
         }
     }
@@ -594,7 +934,7 @@ public class Main extends ApplicationAdapter {
         }
         pm.setColor(-1);
         pm.fillRectangle(w - 3, h - 3, 3, 3);
-        if("msdf".equals(args[1])){
+        if(config.mode == FontwriterConfig.Mode.MSDF){
             PixmapIO.writePNG(file, pm, 0, false);
             return;
         }
