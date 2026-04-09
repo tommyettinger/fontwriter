@@ -129,16 +129,16 @@ public class Main extends ApplicationAdapter {
 
         // --- Options ---
         System.out.println("Options (can be given in any order after the required arguments):");
-        System.out.println("");
+        System.out.println();
         System.out.println("  -s WxH");
         System.out.println("  --image-size WxH   Output image dimensions.");
         System.out.println("                     Default: 2048x2048 (or 4096x4096 for 30000+ chars).");
-        System.out.println("");
+        System.out.println();
         System.out.println("  -c COLOR");
         System.out.println("  --color COLOR      Generate an extra full-glyph preview with the given");
         System.out.println("                     text color. Accepts named colors ('black',");
         System.out.println("                     'dark dullest violet-blue') or hex ('#E74200').");
-        System.out.println("");
+        System.out.println();
         System.out.println("  -C NAME");
         System.out.println("  --charset NAME     Use a predefined character set instead of including");
         System.out.println("                     every character in the font. Available sets:");
@@ -153,7 +153,7 @@ public class Main extends ApplicationAdapter {
         System.out.println("                     Default: 'all' (every visible character in the font).");
         System.out.println("                     Can be overridden with a specific set, or replaced");
         System.out.println("                     entirely by using --lang instead (see below).");
-        System.out.println("");
+        System.out.println();
         System.out.println("  -l PATH");
         System.out.println("  --lang PATH        I18N source for character extraction. Accepts:");
         System.out.println("                       Folder:  --lang i18n/de");
@@ -164,10 +164,10 @@ public class Main extends ApplicationAdapter {
         System.out.println("                         Reads that single file.");
         System.out.println("                     Characters found (plus ASCII 32-126 baseline) determine");
         System.out.println("                     which glyphs to include. Only active when explicitly passed.");
-        System.out.println("");
+        System.out.println();
         System.out.println("  -h");
         System.out.println("  --help             Show this help message and exit.");
-        System.out.println("");
+        System.out.println();
         System.out.println("  -v");
         System.out.println("  --version          Show version and exit.");
         System.out.println();
@@ -492,19 +492,18 @@ public class Main extends ApplicationAdapter {
                 commandList.set(commandList.size() - 3, String.valueOf(size));
                 commandList.set(commandList.size() - 8, mode == FontwriterConfig.Mode.SDF ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
                 builder.command(commandList);
+                System.out.print("Trying size: " + size + "... ");
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
                     long failedSize = size;
                     if (--size <= 0) {
                         System.err.println("Error: msdf-atlas-gen could not fit glyphs into the atlas at any size "
-                                + "(last attempted: " + failedSize + "). Terminating.");
+                            + "(last attempted: " + failedSize + "). Terminating.");
                         System.exit(exitCode);
                         break;
                     }
-                    System.out.println("Warning: Could not fit all glyphs into the atlas using font size "
-                            + failedSize + ". Retrying with font size " + size + "...");
                 } else {
-                    System.out.println("Successfully generated atlas using font size " + size + ".");
+                    System.out.println("\nSuccessfully generated atlas using font size " + size + ".");
                     break;
                 }
             } catch (IOException e) {
