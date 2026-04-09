@@ -78,10 +78,10 @@ in the file. BitmapFont doesn't store any info about distance fields in its file
 This has always worked on Windows, but now we have a working release for macOS (x64 and arm64) and Linux (x64)!
 
 If you have the JAR from the releases, unzip it so the other files it came with are all in the same folder
-structure. Then, you can enter the directory with that holds `fontwriter-2.2.13.1.jar` and run
-`java -jar fontwriter-2.2.13.1.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
+structure. Then, you can enter the directory with that holds `fontwriter-2.2.14.0.jar` and run
+`java -jar fontwriter-2.2.14.0.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
 or an .otf file (.ttc may work). "MyFont.ttf" doesn't have to be in the same folder if you give it an absolute
-path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.2.13.1.jar ` to enter its
+path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.2.14.0.jar ` to enter its
 absolute path). The second parameter, `standard`, can also be `sdf` or `msdf`. You might just want `standard`
 for many reasons; even though it won't scale up nicely, it will scale down fairly well, and you can
 interchange `standard` fonts using FontFamily or using colorful emoji. On the other hand is `msdf`, which
@@ -89,8 +89,55 @@ scales up very well, but looks a little odd with colorful emoji. Then `sdf` is s
 in the middle; it works somewhat well with emoji, though it doesn't handle their partially transparent edge
 very well, scales up nicely, and optionally can allow a shader to automatically outline text. The
 "60" parameter is a size, I think measured in pt or px. It isn't necessarily going to be used as-is; if the
-size is too large, progressively smaller sizes will get tried until all glyphs fit. You
-can optionally specify a size of image to write (the default is 2048x2048, and fonts that only use ASCII
+size is too large, progressively smaller sizes will get tried until all glyphs fit.
+
+There are optional parameters that can be passed after the first three required parameters (after the size).
+Using named parameters is recommended, though there is also a positional syntax for compatibility.
+
+The named parameter syntax (RECOMMENDED):
+
+```
+-s WxH
+--image-size WxH   Output image dimensions.
+  You may want to set this to a smaller size (smaller than a power of
+  two, to allow padding) if you pack a font into a texture atlas.
+  Default: 2048x2048 (or 4096x4096 for 30000+ chars).
+
+-c COLOR
+--color COLOR      Generate an extra full-glyph preview with the given
+  text color. Accepts named colors ('black',
+  'dark dullest violet-blue') or hex ('#E74200').
+
+-C NAME
+--charset NAME     Use a predefined character set instead of including
+  every character in the font. Available sets:
+  ascii     — Basic ASCII (32-126). English only.
+  latin     — ASCII + Latin-1 + Latin Extended-A.
+    Western/Central/Eastern European.
+  latin-ext — Latin + Extended-B + Additional.
+    Vietnamese, Welsh, rare romanizations.
+  cyrillic  — Latin + Cyrillic. Russian, Ukrainian, etc.
+  greek     — Latin + Greek.
+  all       — Every character in the font (32-65535).
+  Default: 'all' (every visible character in the font).
+  Can be overridden with a specific set, or replaced
+  entirely by using --lang instead (see below).
+
+-l PATH
+--lang PATH        I18N source for character extraction. Accepts:
+  Folder:  --lang i18n/de
+  Reads all files in that folder.
+  Pattern: --lang "i18n/*.txt" or --lang "i18n/strings_*"
+  Matches files against the glob (* and ? wildcards).
+  File:    --lang i18n/de/strings.properties
+  Reads that single file.
+  Characters found (plus ASCII 32-126 baseline) determine
+  which glyphs to include. Only active when explicitly passed.
+```
+
+The legacy positional syntax (NOT RECOMMENDED):
+
+You can optionally specify a size of image to write (the default is 2048x2048, and fonts that only use ASCII
 probably don't need that much space) as the next parameter. After that you can optionally specify a color
 by name (such as "black" or "red") or RGB hex code (such as "BB3311"; RGBA also works but alpha is
 ignored), which will write an extra preview of all chars using that color. The fifth argument is there so
@@ -104,6 +151,10 @@ look for the same name patterns in the folder with the font file. If no text fil
 every char in the font will be used in the generated files. If you have `lang_*` or `*.properties` files in
 your project, it is suggested to put them in their own folder or folders and specify the path yourself,
 rather than relying on having a mix of I18N and font files in one folder.
+
+Regardless of which extra arguments you use or not, you must specify at least a font file, distance field
+mode, and size. The rest assumes you ran `java -jar fontwriter-2.2.14.0.jar "MyFont.ttf" standard 60`
+without optional parameters, unless specified.
 
 Running that command will try the size you give it first, and if it can't fit all chars in the font into
 a 2048x2048 (or other size, if specified) image, it will reduce the size and try again, repeatedly. Once
@@ -122,8 +173,6 @@ you're done!
 As an overview: The minimal arguments are the font's path, the distance field type, and the max font size.
 The maximal arguments are the font's path, the distance field type, the font size, the size of the image to
 write (such as `4096x4096`, with an `x` separating width and height), and a color (by name or hex code).
-All arguments are positional; the order is the only thing that matters. Arguments after the font size are
-optional, and default to `2048x2048` and `""` (without the color argument, it won't make an extra preview).
 
 ## Windows Binaries? Gross!
 
@@ -156,3 +205,15 @@ is built by GitHub Actions rather than being built by Chlumsky, but is still MIT
 
 The included oxipng also uses the [MIT License](https://github.com/shssoichiro/oxipng/blob/master/LICENSE).
 
+## Thanks
+
+This tool wouldn't exist without @Chlumsky and the MSDF work he's done. Somehow, msdf-atlas-gen does a better job at all
+the font-related generation than just about anything else, almost all the time... Effects like what Hiero has would be
+nice in the long run, but those can be done by adapting an SDF or MSDF shader, too!
+
+The [oxipng](https://github.com/oxipng/oxipng) tool is something I find myself reaching for all the time; it's been
+invaluable for keeping the file size of some of my repos within GitHub's (generous) limits.
+
+The PR by @rotter that cleaned up a lot of the code, especially regarding named parameters, was extremely helpful.
+I was starting to incur some technical debt from adding more positional parameters, and having named ones is nice.
+Several issues @rotter posted earlier showed both problems and ways past them, which is always good to receive!
