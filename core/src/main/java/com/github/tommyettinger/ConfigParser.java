@@ -56,12 +56,12 @@ public class ConfigParser {
             return config;
         }
 
-        // --- Special commands ---
-        FontwriterConfig.SpecialCommand special = FontwriterConfig.SpecialCommand.fromFlag(first);
-        if (special != null) {
-            config.specialCommand = special;
+        // --- Batch commands ---
+        FontwriterConfig.BatchCommand batch = FontwriterConfig.BatchCommand.fromFlag(first);
+        if (batch != null) {
+            config.batchCommand = batch;
             if (args.length > 1) {
-                config.specialCommandPath = args[1];
+                config.batchCommandPath = args[1];
             }
             return config;
         }

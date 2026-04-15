@@ -19,7 +19,7 @@ import java.util.List;
  * pick the correct {@code distbin/} directory for the bundled
  * msdf-atlas-gen and oxipng binaries, and then — once libGDX has
  * created a GL context in {@link #create()} — either dispatches to
- * {@link #runSpecialCommand()} (for {@code --bulk}, {@code --preview},
+ * {@link #runBatchCommand()} (for {@code --bulk}, {@code --preview},
  * {@code --ubj}, {@code --lzma}) or runs {@link #mainProcess()} once
  * for the single font requested on the command line.
  * <p>
@@ -77,8 +77,8 @@ public class Main extends ApplicationAdapter {
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
 
-        if (config.specialCommand != null) {
-            runSpecialCommand();
+        if (config.batchCommand != null) {
+            runBatchCommand();
         } else {
             mainProcess();
         }
@@ -86,9 +86,9 @@ public class Main extends ApplicationAdapter {
         Gdx.app.exit();
     }
 
-    private void runSpecialCommand() {
-        FontwriterConfig.SpecialCommand command = config.specialCommand;
-        String inPath = config.resolveSpecialCommandPath();
+    private void runBatchCommand() {
+        FontwriterConfig.BatchCommand command = config.batchCommand;
+        String inPath = config.resolveBatchCommandPath();
 
         switch (command) {
             case BULK: {

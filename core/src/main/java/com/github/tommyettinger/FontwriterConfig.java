@@ -174,12 +174,12 @@ public class FontwriterConfig {
     }
 
     /**
-     * Special command keywords — mutually exclusive with standard font
+     * Batch command keywords — mutually exclusive with standard font
      * generation. Each value owns its own CLI flag and default input
      * folder, and is resolved from the first CLI argument by
      * {@link #fromFlag(String)}.
      */
-    public enum SpecialCommand {
+    public enum BatchCommand {
         /** Process every .ttf/.otf in the folder. Default folder: "input". */
         BULK("--bulk", "input"),
 
@@ -198,19 +198,19 @@ public class FontwriterConfig {
         /** Default folder used when the user did not pass an explicit path. */
         public final String defaultPath;
 
-        SpecialCommand(String flag, String defaultPath) {
+        BatchCommand(String flag, String defaultPath) {
             this.flag = flag;
             this.defaultPath = defaultPath;
         }
 
         /**
-         * Resolves a raw CLI argument to a SpecialCommand.
+         * Resolves a raw CLI argument to a BatchCommand.
          * @param arg the raw argument (e.g. "--bulk")
          * @return the matching command, or {@code null} if {@code arg} is
-         *         not a recognized special command flag
+         *         not a recognized batch command flag
          */
-        public static SpecialCommand fromFlag(String arg) {
-            for (SpecialCommand c : values()) {
+        public static BatchCommand fromFlag(String arg) {
+            for (BatchCommand c : values()) {
                 if (c.flag.equals(arg)) return c;
             }
             return null;
@@ -236,7 +236,7 @@ public class FontwriterConfig {
     }
 
     // ---------------------------------------------------------------
-    //  Special commands — mutually exclusive with standard generation.
+    //  Batch commands — mutually exclusive with standard generation.
     //  When one of these is set, the three required positional args
     //  are not needed.
     // ---------------------------------------------------------------
@@ -254,26 +254,26 @@ public class FontwriterConfig {
     public boolean versionRequested = false;
 
     /**
-     * Special command, if any. Null when running normal font generation.
-     * See {@link SpecialCommand} for the supported values.
+     * Batch command, if any. Null when running normal font generation.
+     * See {@link BatchCommand} for the supported values.
      */
-    public SpecialCommand specialCommand = null;
+    public BatchCommand batchCommand = null;
 
     /**
-     * Explicit folder path for a special command. When null, the command's
-     * {@link SpecialCommand#defaultPath} is used instead. Resolve via
-     * {@link #resolveSpecialCommandPath()} rather than reading this field
+     * Explicit folder path for a batch command. When null, the command's
+     * {@link BatchCommand#defaultPath} is used instead. Resolve via
+     * {@link #resolveBatchCommandPath()} rather than reading this field
      * directly.
      */
-    public String specialCommandPath = null;
+    public String batchCommandPath = null;
 
     /**
-     * Returns the folder path the active special command should operate on,
+     * Returns the folder path the active batch command should operate on,
      * falling back to the command's default when no explicit path was given.
-     * Must only be called when {@link #specialCommand} is non-null.
+     * Must only be called when {@link #batchCommand} is non-null.
      */
-    public String resolveSpecialCommandPath() {
-        return specialCommandPath != null ? specialCommandPath : specialCommand.defaultPath;
+    public String resolveBatchCommandPath() {
+        return batchCommandPath != null ? batchCommandPath : batchCommand.defaultPath;
     }
 
     // ---------------------------------------------------------------
@@ -401,10 +401,10 @@ public class FontwriterConfig {
 
     /**
      * Returns true when this config represents a standard font generation
-     * run (not a special command, not --help, not --version).
+     * run (not a batch command, not --help, not --version).
      */
     public boolean isStandardRun() {
-        return !helpRequested && !versionRequested && specialCommand == null;
+        return !helpRequested && !versionRequested && batchCommand == null;
     }
 
     /**
@@ -463,8 +463,8 @@ public class FontwriterConfig {
         if (!isStandardRun()) {
             if (helpRequested) return "FontwriterConfig{--help}";
             if (versionRequested) return "FontwriterConfig{--version}";
-            return "FontwriterConfig{" + specialCommand
-                    + (specialCommandPath != null ? " " + specialCommandPath : "")
+            return "FontwriterConfig{" + batchCommand
+                    + (batchCommandPath != null ? " " + batchCommandPath : "")
                     + "}";
         }
         StringBuilder sb = new StringBuilder("FontwriterConfig{");
