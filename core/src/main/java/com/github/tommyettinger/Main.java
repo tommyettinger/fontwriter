@@ -232,7 +232,7 @@ public class Main extends ApplicationAdapter {
             imageFile.copyTo(fullPreviewFile);
             process(fullPreviewFile, fullPreviewColor);
         }
-        process(imageFile);
+        process(imageFile, NO_COLOR_OVERRIDE);
 
         System.out.println("Optimizing result with oxipng...");
 
@@ -328,9 +328,16 @@ public class Main extends ApplicationAdapter {
                 new File(Gdx.files.getLocalStoragePath()));
     }
 
-    private void process (FileHandle file) {
-        process(file, 256);
-    }
+    /**
+     * Sentinel value for {@link #process(FileHandle, int)} meaning
+     * "no caller-supplied color": the method then validates that the
+     * bottom-right 3x3 corner of the atlas is safe to stamp over and
+     * falls back to opaque white ({@code -1}) as the palette RGB.
+     * Chosen as 256 because all real RGBA8888 values fit in 32 bits,
+     * so 256 is outside any legal color.
+     */
+    private static final int NO_COLOR_OVERRIDE = 256;
+
     private void process (FileHandle file, int rgba) {
         if (!file.exists()) {
             System.out.println("The specified file " + file + " does not exist; skipping.");
@@ -339,7 +346,7 @@ public class Main extends ApplicationAdapter {
         Pixmap pm = new Pixmap(file);
 
         final int w = pm.getWidth(), h = pm.getHeight();
-        if (rgba == 256) {
+        if (rgba == NO_COLOR_OVERRIDE) {
             for (int x = w - 3; x < w; x++) {
                 for (int y = h - 3; y < h; y++) {
                     int color = pm.getPixel(x, y);
