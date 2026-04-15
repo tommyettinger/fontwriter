@@ -4,16 +4,10 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.*;
-import com.github.tommyettinger.textra.Font;
-import com.github.tommyettinger.textra.Layout;
 import com.github.tommyettinger.textra.utils.LZBCompression;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,20 +16,7 @@ public class Main extends ApplicationAdapter {
 
     private final IndexedPngWriter indexedPngWriter = new IndexedPngWriter();
     private FontwriterConfig config;
-
-    private SpriteBatch batch;
-
-    private final Layout layout = new Layout().setTargetWidth(1200);
-    private static final String text = "Fonts can be rendered normally,{CURLY BRACKETS ARE IGNORED} but using [[tags], you can..."
-            + "\n[#E74200]...use CSS-style hex colors like [*]#E74200[*]..."
-            + "\n[darker purple blue]...use color names or descriptions, like [/]darker purple blue[/]...[ ]"
-            + "\n[_]...and use [!]effects[!][_]!"
-            + "\nNormal, [*]bold[*], [/]oblique[/] (like italic), [*][/]bold oblique[ ],"
-            + "\n[_]underline (even for multiple words)[_], [~]strikethrough (same)[ ],"
-            + "\nscaling: [%50]very [%75]small [%100]to [%150]quite [%200]large[ ], notes: [.]sub-[.], [=]mid-[=], and [^]super-[^]script,"
-            + "\ncapitalization changes: [;]Each cap, [,]All lower, [!]Caps lock[ ],"
-            + "\n[?small caps][*]Special[*][?] [?whiten][/]Effects[/][?][#]: [?shadow]drop shadow[?], [?jostle]RaNsoM nOtE[?], [?error]spell check[?]..."
-            + "\nWelcome to the [TEAL][?neon]Structured JSON Zone[ ]!";
+    private PreviewRenderer previewRenderer;
 
     String archPath, atlasGenBinary, oxipngBinary = "oxipng";
 
@@ -76,7 +57,7 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void create() {
-        batch = new SpriteBatch();
+        previewRenderer = new PreviewRenderer(archPath, oxipngBinary);
         Gdx.files.local("fonts").mkdirs();
         Gdx.files.local("previews").mkdirs();
 
@@ -129,7 +110,7 @@ public class Main extends ApplicationAdapter {
                     previewConfig.fontPath = filePath;
                     previewConfig.mode = FontwriterConfig.Mode.fromString(fileMode);
                     this.config = previewConfig;
-                    makePreview(inPath + "/", fontName);
+                    previewRenderer.render(config, inPath + "/", fontName);
                 }
                 break;
             }
@@ -252,7 +233,7 @@ public class Main extends ApplicationAdapter {
             System.out.println("Running command: " + String.join(" ", oxiCmd));
             BinaryExec.runOrExit(archPath + oxipngBinary, "oxipng", oxiCmd, workingDir);
         }
-        makePreview("fonts/", fontName);
+        previewRenderer.render(config, "fonts/", fontName);
 
         // --- Summary: list all generated files with full paths ---
         System.out.println();
@@ -275,57 +256,6 @@ public class Main extends ApplicationAdapter {
                 System.out.println("  " + colorPreview.file().getAbsolutePath());
             }
         }
-    }
-
-    private void makePreview(String inPath, String fontName) {
-        FontwriterConfig.Mode mode = config.mode;
-        System.out.println("Creating a preview for " + fontName + "-" + mode + "...");
-        Texture fontTexture = new Texture(inPath+fontName+"-"+mode+".png");
-        Font font = new Font(inPath+fontName+"-"+mode+".json",
-                new TextureRegion(fontTexture), 0f, 0f, 0f, 0f,
-                true, true);
-        if(fontTexture.getWidth() >= 1024 && fontTexture.getHeight() >= 1024)
-            font.scaleHeightTo(32f);
-        else
-            font.scale(Math.round(512f / fontTexture.getHeight()))
-                .setTextureFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest)
-                .useIntegerPositions(true); // for pixel fonts
-        font.resizeDistanceField(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
-
-        layout.setBaseColor(Color.DARK_GRAY);
-        layout.setMaxLines(20);
-        layout.setEllipsis(" and so on and so forth...");
-        font.markup(text, layout);
-
-        ScreenUtils.clear(0.75f, 0.75f, 0.75f, 1f);
-        float x = Gdx.graphics.getBackBufferWidth() * 0.5f;
-        float y = (Gdx.graphics.getBackBufferHeight() + layout.getHeight()) * 0.5f;
-        batch.begin();
-        font.enableShader(batch);
-        font.drawGlyphs(batch, layout, x, y, Align.center);
-        batch.end();
-
-        // Modified Pixmap.createFromFrameBuffer() code that uses RGB instead of RGBA
-        Gdx.gl.glPixelStorei(GL20.GL_PACK_ALIGNMENT, 1);
-        final Pixmap pm = new Pixmap(Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), Pixmap.Format.RGB888);
-        ByteBuffer pixels = pm.getPixels();
-        Gdx.gl.glReadPixels(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight(), GL20.GL_RGB, GL20.GL_UNSIGNED_BYTE, pixels);
-        // End Pixmap.createFromFrameBuffer() modified code
-
-        FileHandle previewFile = Gdx.files.local("previews/" + fontName+"-"+mode + ".png");
-        PixmapIO.writePNG(previewFile, pm, 0, true);
-
-        List<String> oxiCmd = new ArrayList<>();
-        oxiCmd.add(archPath + oxipngBinary);
-        oxiCmd.add("-o");
-        oxiCmd.add("6");
-        oxiCmd.add("--ng");
-        oxiCmd.add("-s");
-        oxiCmd.add(previewFile.path());
-
-        System.out.println("Running command: " + String.join(" ", oxiCmd));
-        BinaryExec.runOrExit(archPath + oxipngBinary, "oxipng", oxiCmd,
-                new File(Gdx.files.getLocalStoragePath()));
     }
 
     /**
