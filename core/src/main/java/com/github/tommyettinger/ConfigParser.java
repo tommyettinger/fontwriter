@@ -16,7 +16,7 @@ package com.github.tommyettinger;
  * the first three starts with "-", named-flag mode is used; otherwise
  * legacy positional mode is assumed.
  * <p>
- * Special commands ({@code --bulk}, {@code --preview}, {@code --ubj},
+ * Batch commands ({@code --bulk}, {@code --preview}, {@code --ubj},
  * {@code --lzma}) are detected first and short-circuit the rest of
  * the parsing.
  */
@@ -56,12 +56,12 @@ public class ConfigParser {
             return config;
         }
 
-        // --- Special commands ---
-        if ("--bulk".equals(first) || "--preview".equals(first)
-                || "--ubj".equals(first) || "--lzma".equals(first)) {
-            config.specialCommand = first.substring(2); // strip "--"
+        // --- Batch commands ---
+        FontwriterConfig.BatchCommand batch = FontwriterConfig.BatchCommand.fromFlag(first);
+        if (batch != null) {
+            config.batchCommand = batch;
             if (args.length > 1) {
-                config.specialCommandPath = args[1];
+                config.batchCommandPath = args[1];
             }
             return config;
         }

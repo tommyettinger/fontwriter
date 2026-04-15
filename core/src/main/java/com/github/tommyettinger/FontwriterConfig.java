@@ -16,7 +16,7 @@ import java.util.Locale;
  *   java -jar fontwriter.jar MyFont.otf msdf 60 --lang i18n/de --color black
  *   java -jar fontwriter.jar MyFont.otf sdf 200 --charset latin
  * </pre>
- * <b>Usage (special commands):</b>
+ * <b>Usage (batch commands):</b>
  * <pre>
  *   java -jar fontwriter.jar --bulk [folder]
  *   java -jar fontwriter.jar --preview [folder]
@@ -174,6 +174,55 @@ public class FontwriterConfig {
     }
 
     /**
+     * Batch command keywords — mutually exclusive with standard font
+     * generation. Each value owns its own CLI flag and default input
+     * folder, and is resolved from the first CLI argument by
+     * {@link #fromFlag(String)}.
+     */
+    public enum BatchCommand {
+        /** Process every .ttf/.otf in the folder. Default folder: "input". */
+        BULK("--bulk", "input"),
+
+        /** Generate previews for .json fonts in the folder. Default: "fonts". */
+        PREVIEW("--preview", "fonts"),
+
+        /** Convert .json fonts to .ubj + .ubj.lzma. Default folder: "fonts". */
+        UBJ("--ubj", "fonts"),
+
+        /** Compress .json fonts with LZMA. Default folder: "fonts". */
+        LZMA("--lzma", "fonts");
+
+        /** The user-facing CLI flag including leading dashes (e.g. "--bulk"). */
+        public final String flag;
+
+        /** Default folder used when the user did not pass an explicit path. */
+        public final String defaultPath;
+
+        BatchCommand(String flag, String defaultPath) {
+            this.flag = flag;
+            this.defaultPath = defaultPath;
+        }
+
+        /**
+         * Resolves a raw CLI argument to a BatchCommand.
+         * @param arg the raw argument (e.g. "--bulk")
+         * @return the matching command, or {@code null} if {@code arg} is
+         *         not a recognized batch command flag
+         */
+        public static BatchCommand fromFlag(String arg) {
+            for (BatchCommand c : values()) {
+                if (c.flag.equals(arg)) return c;
+            }
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return flag;
+        }
+    }
+
+    /**
      * Describes which strategy the charset resolution used.
      * See the class-level Javadoc for the fallback hierarchy.
      */
@@ -187,7 +236,7 @@ public class FontwriterConfig {
     }
 
     // ---------------------------------------------------------------
-    //  Special commands — mutually exclusive with standard generation.
+    //  Batch commands — mutually exclusive with standard generation.
     //  When one of these is set, the three required positional args
     //  are not needed.
     // ---------------------------------------------------------------
@@ -205,20 +254,27 @@ public class FontwriterConfig {
     public boolean versionRequested = false;
 
     /**
-     * Special command keyword, if any: "bulk", "preview", "ubj", or "lzma".
-     * Null when running normal font generation.
+     * Batch command, if any. Null when running normal font generation.
+     * See {@link BatchCommand} for the supported values.
      */
-    public String specialCommand = null;
+    public BatchCommand batchCommand = null;
 
     /**
-     * Folder path used by special commands (--bulk, --preview, --ubj, --lzma).
-     * Each command has its own default if this is null:
-     *   --bulk    → "input"
-     *   --preview → "fonts"
-     *   --ubj     → "fonts"
-     *   --lzma    → "fonts"
+     * Explicit folder path for a batch command. When null, the command's
+     * {@link BatchCommand#defaultPath} is used instead. Resolve via
+     * {@link #resolveBatchCommandPath()} rather than reading this field
+     * directly.
      */
-    public String specialCommandPath = null;
+    public String batchCommandPath = null;
+
+    /**
+     * Returns the folder path the active batch command should operate on,
+     * falling back to the command's default when no explicit path was given.
+     * Must only be called when {@link #batchCommand} is non-null.
+     */
+    public String resolveBatchCommandPath() {
+        return batchCommandPath != null ? batchCommandPath : batchCommand.defaultPath;
+    }
 
     // ---------------------------------------------------------------
     //  Required positional arguments (standard font generation).
@@ -345,10 +401,10 @@ public class FontwriterConfig {
 
     /**
      * Returns true when this config represents a standard font generation
-     * run (not a special command, not --help, not --version).
+     * run (not a batch command, not --help, not --version).
      */
     public boolean isStandardRun() {
-        return !helpRequested && !versionRequested && specialCommand == null;
+        return !helpRequested && !versionRequested && batchCommand == null;
     }
 
     /**
@@ -407,8 +463,8 @@ public class FontwriterConfig {
         if (!isStandardRun()) {
             if (helpRequested) return "FontwriterConfig{--help}";
             if (versionRequested) return "FontwriterConfig{--version}";
-            return "FontwriterConfig{--" + specialCommand
-                    + (specialCommandPath != null ? " " + specialCommandPath : "")
+            return "FontwriterConfig{" + batchCommand
+                    + (batchCommandPath != null ? " " + batchCommandPath : "")
                     + "}";
         }
         StringBuilder sb = new StringBuilder("FontwriterConfig{");
