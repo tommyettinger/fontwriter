@@ -83,6 +83,7 @@ public class Main extends ApplicationAdapter {
             mainProcess();
         }
 
+        previewRenderer.dispose();
         Gdx.app.exit();
     }
 

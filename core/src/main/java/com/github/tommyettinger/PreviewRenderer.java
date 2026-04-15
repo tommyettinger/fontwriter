@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
@@ -35,7 +36,7 @@ import java.util.List;
  * {@code previews/&lt;fontName&gt;-&lt;mode&gt;.png} and then optimized
  * in place with oxipng via {@link BinaryExec#runOrExit}.
  */
-final class PreviewRenderer {
+final class PreviewRenderer implements Disposable {
 
     /**
      * Markup text used for every preview image. It exercises most of
@@ -141,5 +142,16 @@ final class PreviewRenderer {
         System.out.println("Running command: " + String.join(" ", oxiCmd));
         BinaryExec.runOrExit(archPath + oxipngBinary, "oxipng", oxiCmd,
                 new File(Gdx.files.getLocalStoragePath()));
+    }
+
+    /**
+     * Releases the native GL resources owned by this renderer — namely
+     * the {@link SpriteBatch} allocated in the constructor. Must be
+     * called on the libGDX render thread before application shutdown.
+     * After calling this, {@link #render} must not be called again.
+     */
+    @Override
+    public void dispose() {
+        batch.dispose();
     }
 }
