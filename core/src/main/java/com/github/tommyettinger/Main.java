@@ -159,27 +159,6 @@ public class Main extends ApplicationAdapter {
         }
     }
 
-    /**
-     * Verifies that an external binary exists and is executable before
-     * attempting to run it. Prints a descriptive error message and exits
-     * if the binary is missing or not executable.
-     *
-     * @param binaryPath the relative path to the binary (e.g. "distbin/mac-arm64/msdf-atlas-gen")
-     * @param binaryName a human-readable name for error messages (e.g. "msdf-atlas-gen")
-     */
-    private void verifyBinary(String binaryPath, String binaryName) {
-        File binaryFile = new File(Gdx.files.getLocalStoragePath(), binaryPath);
-        if (!binaryFile.exists()) {
-            CliMessages.printBinaryNotFound(binaryName, binaryFile.getAbsolutePath());
-            System.exit(1);
-        }
-        if (!binaryFile.canExecute()) {
-            CliMessages.printBinaryNotExecutable(binaryName, binaryPath,
-                    binaryFile.getAbsolutePath(), SharedLibraryLoader.os);
-            System.exit(1);
-        }
-    }
-
     public void mainProcess() {
         String fontFileName = config.fontPath;
         FontwriterConfig.Mode mode = config.mode;
@@ -324,39 +303,23 @@ public class Main extends ApplicationAdapter {
         commandList.add("-outerpxpadding");
         commandList.add("1");
 
-        verifyBinary(archPath + atlasGenBinary, "msdf-atlas-gen");
-
-        ProcessBuilder builder = new ProcessBuilder(commandList);
-        System.out.println("Running command: " + String.join(" ", builder.command()));
-
-        builder.directory(new File(Gdx.files.getLocalStoragePath()));
-        builder.inheritIO();
+        File workingDir = new File(Gdx.files.getLocalStoragePath());
+        System.out.println("Running command: " + String.join(" ", commandList));
         while (true) {
-            try {
-                commandList.set(commandList.size() - 3, String.valueOf(size));
-                commandList.set(commandList.size() - 8, mode == FontwriterConfig.Mode.SDF ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
-                builder.command(commandList);
-                System.out.print("Trying size: " + size + "... ");
-                int exitCode = builder.start().waitFor();
-                if (exitCode != 0) {
-                    long failedSize = size;
-                    if (--size <= 0) {
-                        System.err.println("Error: msdf-atlas-gen could not fit glyphs into the atlas at any size "
-                            + "(last attempted: " + failedSize + "). Terminating.");
-                        System.exit(exitCode);
-                        break;
-                    }
-                } else {
-                    System.out.println("\nSuccessfully generated atlas using font size " + size + ".");
+            commandList.set(commandList.size() - 3, String.valueOf(size));
+            commandList.set(commandList.size() - 8, mode == FontwriterConfig.Mode.SDF ? String.valueOf(size * 0.15f) : String.valueOf(size * 0.1));
+            System.out.print("Trying size: " + size + "... ");
+            int exitCode = BinaryExec.run(archPath + atlasGenBinary, "msdf-atlas-gen", commandList, workingDir);
+            if (exitCode != 0) {
+                long failedSize = size;
+                if (--size <= 0) {
+                    System.err.println("Error: msdf-atlas-gen could not fit glyphs into the atlas at any size "
+                        + "(last attempted: " + failedSize + "). Terminating.");
+                    System.exit(exitCode);
                     break;
                 }
-            } catch (IOException e) {
-                CliMessages.printBinaryRunFailed("msdf-atlas-gen", e.getMessage(), SharedLibraryLoader.os);
-                System.exit(1);
-                break;
-            } catch (InterruptedException e) {
-                CliMessages.printBinaryInterrupted("msdf-atlas-gen", e.getMessage());
-                System.exit(1);
+            } else {
+                System.out.println("\nSuccessfully generated atlas using font size " + size + ".");
                 break;
             }
         }
@@ -379,7 +342,6 @@ public class Main extends ApplicationAdapter {
         process(imageFile);
 
         System.out.println("Optimizing result with oxipng...");
-        verifyBinary(archPath + oxipngBinary, "oxipng");
 
         List<String> oxiCmd = new ArrayList<>();
         oxiCmd.add(archPath + oxipngBinary);
@@ -389,40 +351,13 @@ public class Main extends ApplicationAdapter {
         oxiCmd.add("-s");
         oxiCmd.add(imageFile.path());
 
-        builder.command(oxiCmd);
-        System.out.println("Running command: " + String.join(" ", builder.command()));
+        System.out.println("Running command: " + String.join(" ", oxiCmd));
+        BinaryExec.runOrExit(archPath + oxipngBinary, "oxipng", oxiCmd, workingDir);
 
-        try {
-            int exitCode = builder.start().waitFor();
-            if (exitCode != 0) {
-                CliMessages.printBinaryExitFailure("oxipng", exitCode);
-                System.exit(exitCode);
-            }
-        } catch (IOException e) {
-            CliMessages.printBinaryRunFailed("oxipng", e.getMessage(), SharedLibraryLoader.os);
-            System.exit(1);
-        } catch (InterruptedException e) {
-            CliMessages.printBinaryInterrupted("oxipng", e.getMessage());
-            System.exit(1);
-        }
         if (fullPreview) {
             oxiCmd.set(oxiCmd.size() - 1, fullPreviewFile.path());
-            builder.command(oxiCmd);
-            System.out.println("Running command: " + String.join(" ", builder.command()));
-            try {
-                int exitCode = builder.start().waitFor();
-                if (exitCode != 0) {
-                    CliMessages.printBinaryExitFailure("oxipng", exitCode);
-                    System.exit(exitCode);
-                }
-            } catch (IOException e) {
-                CliMessages.printBinaryRunFailed("oxipng", e.getMessage(), SharedLibraryLoader.os);
-                System.exit(1);
-            } catch (InterruptedException e) {
-                CliMessages.printBinaryInterrupted("oxipng", e.getMessage());
-                System.exit(1);
-            }
-
+            System.out.println("Running command: " + String.join(" ", oxiCmd));
+            BinaryExec.runOrExit(archPath + oxipngBinary, "oxipng", oxiCmd, workingDir);
         }
         makePreview("fonts/", fontName);
 
@@ -643,27 +578,9 @@ public class Main extends ApplicationAdapter {
         oxiCmd.add("-s");
         oxiCmd.add(previewFile.path());
 
-        // Verify oxipng binary — this method is also called from --preview,
-        // which does not go through mainProcess(), so we must check here.
-        verifyBinary(archPath + oxipngBinary, "oxipng");
-
-        ProcessBuilder builder = new ProcessBuilder(oxiCmd);
-        builder.directory(new File(Gdx.files.getLocalStoragePath()));
-        builder.inheritIO();
-        System.out.println("Running command: " + String.join(" ", builder.command()));
-        try {
-            int exitCode = builder.start().waitFor();
-            if (exitCode != 0) {
-                CliMessages.printBinaryExitFailure("oxipng", exitCode);
-                System.exit(exitCode);
-            }
-        } catch (IOException e) {
-            CliMessages.printBinaryRunFailed("oxipng", e.getMessage(), SharedLibraryLoader.os);
-            System.exit(1);
-        } catch (InterruptedException e) {
-            CliMessages.printBinaryInterrupted("oxipng", e.getMessage());
-            System.exit(1);
-        }
+        System.out.println("Running command: " + String.join(" ", oxiCmd));
+        BinaryExec.runOrExit(archPath + oxipngBinary, "oxipng", oxiCmd,
+                new File(Gdx.files.getLocalStoragePath()));
     }
 
     private void convertToUBJSON(FileHandle inFile){
