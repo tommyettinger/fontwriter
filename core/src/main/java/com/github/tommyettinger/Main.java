@@ -31,8 +31,6 @@ import static java.awt.Font.TRUETYPE_FONT;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
 
-    private static final String JAR_NAME = "fontwriter-2.2.14.0.jar";
-
     static private final byte[] SIGNATURE = {(byte)137, 80, 78, 71, 13, 10, 26, 10};
     static private final int IHDR = 0x49484452, IDAT = 0x49444154, IEND = 0x49454E44,
             PLTE = 0x504C5445, TRNS = 0x74524E53;
@@ -73,12 +71,12 @@ public class Main extends ApplicationAdapter {
         }
 
         if (config.helpRequested) {
-            printHelp();
+            CliMessages.printHelp();
             System.exit(0);
         }
 
         if (config.versionRequested) {
-            System.out.println("fontwriter " + JAR_NAME.replace("fontwriter-", "").replace(".jar", ""));
+            CliMessages.printVersion();
             System.exit(0);
         }
 
@@ -99,137 +97,6 @@ public class Main extends ApplicationAdapter {
 
     }
 
-    private void printHelp() {
-        String jar = JAR_NAME;
-        System.out.println("Usage: java -jar " + jar + " <font> <mode> <size> [options]");
-        System.out.println();
-        System.out.println("Generate bitmap fonts for libGDX / TextraTypist.");
-        System.out.println();
-
-        // --- Required arguments ---
-        System.out.println("Required arguments:");
-        System.out.println("  <font>     Path to a .ttf or .otf font file (local or absolute).");
-        System.out.println();
-        System.out.println("  <mode>     Rendering mode. One of:");
-        System.out.println("               standard  — non-distance-field bitmap. Scales down well.");
-        System.out.println("                           Works everywhere including BitmapFont. (default)");
-        System.out.println("               sdf       — signed distance field. Scales up nicely; supports");
-        System.out.println("                           outline effects. Has small file sizes.");
-        System.out.println("               msdf      — multichannel SDF. Best upscaling quality, but");
-        System.out.println("                           files are large.");
-//        System.out.println("               mtsdf     — multichannel + true SDF hybrid.");
-//        System.out.println("               psdf      — pseudo SDF.");
-        System.out.println();
-        System.out.println("  <size>     Initial font size to try, in pixels (integer or decimal).");
-        System.out.println("             Recommended: 60 for most fonts. Use 200-280 for sharper");
-        System.out.println("             results (needs more atlas space). Large charsets (CJK) may");
-        System.out.println("             need 30-55 to fit within the atlas dimensions.");
-        System.out.println("             If too large, the generator retries with smaller sizes.");
-        System.out.println();
-
-        // --- Options ---
-        System.out.println("Options (can be given in any order after the required arguments):");
-        System.out.println();
-        System.out.println("  -s WxH");
-        System.out.println("  --image-size WxH   Output image dimensions.");
-        System.out.println("                     Default: 2048x2048 (or 4096x4096 for 30000+ chars).");
-        System.out.println();
-        System.out.println("  -c COLOR");
-        System.out.println("  --color COLOR      Generate an extra full-glyph preview with the given");
-        System.out.println("                     text color. Accepts named colors ('black',");
-        System.out.println("                     'dark dullest violet-blue') or hex ('#E74200').");
-        System.out.println();
-        System.out.println("  -C NAME");
-        System.out.println("  --charset NAME     Use a predefined character set instead of including");
-        System.out.println("                     every character in the font. Available sets:");
-        System.out.println("                       ascii     — Basic ASCII (32-126). English only.");
-        System.out.println("                       latin     — ASCII + Latin-1 + Latin Extended-A.");
-        System.out.println("                                   Western/Central/Eastern European.");
-        System.out.println("                       latin-ext — Latin + Extended-B + Additional.");
-        System.out.println("                                   Vietnamese, Welsh, rare romanizations.");
-        System.out.println("                       cyrillic  — Latin + Cyrillic. Russian, Ukrainian, etc.");
-        System.out.println("                       greek     — Latin + Greek.");
-        System.out.println("                       all       — Every character in the font (32-65535).");
-        System.out.println("                     Default: 'all' (every visible character in the font).");
-        System.out.println("                     Can be overridden with a specific set, or replaced");
-        System.out.println("                     entirely by using --lang instead (see below).");
-        System.out.println();
-        System.out.println("  -l PATH");
-        System.out.println("  --lang PATH        I18N source for character extraction. Accepts:");
-        System.out.println("                       Folder:  --lang i18n/de");
-        System.out.println("                         Reads all files in that folder.");
-        System.out.println("                       Pattern: --lang \"i18n/*.txt\" or --lang \"i18n/strings_*\"");
-        System.out.println("                         Matches files against the glob (* and ? wildcards).");
-        System.out.println("                       File:    --lang i18n/de/strings.properties");
-        System.out.println("                         Reads that single file.");
-        System.out.println("                     Characters found (plus ASCII 32-126 baseline) determine");
-        System.out.println("                     which glyphs to include. Only active when explicitly passed.");
-        System.out.println();
-        System.out.println("  -h");
-        System.out.println("  --help             Show this help message and exit.");
-        System.out.println();
-        System.out.println("  -v");
-        System.out.println("  --version          Show version and exit.");
-        System.out.println();
-
-        // --- Character set fallback hierarchy ---
-        System.out.println("Character set resolution (first match wins):");
-        System.out.println("  1. --charset given  -> use that predefined set.");
-        System.out.println("  2. --lang given     -> extract chars from matched files (folder, glob, or file).");
-        System.out.println("  3. neither given    -> include ALL visible characters in the font.");
-        System.out.println("  If --charset and --lang are both given, --charset takes priority.");
-        System.out.println();
-
-        // --- Examples with explanations ---
-        System.out.println("Examples:");
-        System.out.println();
-        System.out.println("  java -jar " + jar + " Gentium.ttf standard 60");
-        System.out.println("    Font: Gentium.ttf (relative path). Mode: standard (bitmap, no SDF).");
-        System.out.println("    Size: starts at 60px. Charset: all visible chars (no --charset/--lang).");
-        System.out.println("    Image: 2048x2048 (default). No extra color preview.");
-        System.out.println();
-        System.out.println("  java -jar " + jar + " MyFont.otf msdf 200 --image-size 4096x4096");
-        System.out.println("    Font: MyFont.otf. Mode: msdf. Size: starts at 200px.");
-        System.out.println("    Charset: all visible chars. Image: 4096x4096 (explicit).");
-        System.out.println("    No extra color preview.");
-        System.out.println();
-        System.out.println("  java -jar " + jar + " MyFont.otf sdf 60 --charset latin --color black");
-        System.out.println("    Font: MyFont.otf. Mode: sdf. Size: starts at 60px.");
-        System.out.println("    Charset: latin (ASCII + Latin-1 + Latin Extended-A) via --charset.");
-        System.out.println("    Image: 2048x2048 (default). Extra color preview in black.");
-        System.out.println();
-        System.out.println("  java -jar " + jar + " MyFont.otf standard 60 --lang i18n/de");
-        System.out.println("    Font: MyFont.otf. Mode: standard. Size: starts at 60px.");
-        System.out.println("    Charset: reads all files in i18n/de/, includes only characters");
-        System.out.println("    found there (plus ASCII 32-126 baseline).");
-        System.out.println("    Image: 2048x2048 (default). No extra color preview.");
-        System.out.println();
-
-        // --- Output files ---
-        System.out.println("Output files (written to fonts/ and previews/ folders):");
-        System.out.println("  fonts/<name>-<mode>.png                 Font texture atlas.");
-        System.out.println("  fonts/<name>-<mode>.json                Structured JSON font descriptor.");
-        System.out.println("  fonts/<name>-<mode>.dat                 LZB-compressed descriptor (not recommended).");
-        System.out.println("  fonts/<name>-<mode>.ubj                 UBJSON binary descriptor (smaller than .json).");
-        System.out.println("  fonts/<name>-<mode>.json.lzma           LZMA-compressed .json descriptor (recommended).");
-        System.out.println("  fonts/<name>-<mode>.ubj.lzma            LZMA-compressed .ubj descriptor (smallest).");
-        System.out.println("  previews/<name>-<mode>.png (preview)    Text rendering preview (always generated).");
-        System.out.println("  previews/full-<color>-<name>-<mode>.png Full-glyph color preview (only with --color).");
-        System.out.println("  You only need one descriptor file (.json, .dat, .ubj, etc.).");
-        System.out.println();
-
-        // --- Legacy positional syntax ---
-        System.out.println("Legacy positional syntax (DEPRECATED — will be removed in a future version):");
-        System.out.println("  java -jar " + jar + " <font> <mode> <size> [WxH] [color] [langPath]");
-        System.out.println();
-
-        // --- Special commands ---
-        System.out.println("Special commands:");
-        System.out.println("  --bulk [folder]      Process every .ttf/.otf in folder (default: 'input').");
-        System.out.println("  --preview [folder]   Generate previews for .json fonts (default: 'fonts').");
-        System.out.println("  --ubj [folder]       Convert .json fonts to .ubj + .ubj.lzma (default: 'fonts').");
-        System.out.println("  --lzma [folder]      Compress .json fonts with LZMA (default: 'fonts').");
-    }
     @Override
     public void create() {
         batch = new SpriteBatch();
@@ -313,21 +180,12 @@ public class Main extends ApplicationAdapter {
     private void verifyBinary(String binaryPath, String binaryName) {
         File binaryFile = new File(Gdx.files.getLocalStoragePath(), binaryPath);
         if (!binaryFile.exists()) {
-            System.err.println("Error: " + binaryName + " not found at: " + binaryFile.getAbsolutePath());
-            System.err.println("Make sure the fontwriter distribution is fully extracted and the distbin/ folder");
-            System.err.println("is present alongside the JAR file.");
+            CliMessages.printBinaryNotFound(binaryName, binaryFile.getAbsolutePath());
             System.exit(1);
         }
         if (!binaryFile.canExecute()) {
-            System.err.println("Error: " + binaryName + " exists but is not executable: " + binaryFile.getAbsolutePath());
-            if (SharedLibraryLoader.os == Os.MacOsX) {
-                System.err.println("On macOS, you may need to:");
-                System.err.println("  1. Run: chmod +x " + binaryPath);
-                System.err.println("  2. Allow the binary in System Settings -> Privacy & Security -> Allow");
-                System.err.println("     (macOS may block unsigned binaries on first run)");
-            } else if (SharedLibraryLoader.os == Os.Linux) {
-                System.err.println("On Linux, run: chmod +x " + binaryPath);
-            }
+            CliMessages.printBinaryNotExecutable(binaryName, binaryPath,
+                    binaryFile.getAbsolutePath(), SharedLibraryLoader.os);
             System.exit(1);
         }
     }
@@ -386,11 +244,7 @@ public class Main extends ApplicationAdapter {
                 }
                 System.out.println("  Unique characters found: " + charSet.size);
             } else {
-                System.err.println("Error: --lang '" + config.langPath + "' matched no files.");
-                System.err.println("Check that the path exists and contains readable files.");
-                System.err.println("  Folder:  --lang i18n/de            (reads all files in the folder)");
-                System.err.println("  Pattern: --lang \"i18n/*.txt\"        (glob with * or ? wildcards)");
-                System.err.println("  File:    --lang i18n/strings.properties");
+                CliMessages.printLangNoMatches(config.langPath);
                 System.exit(1);
             }
         } else {
@@ -507,15 +361,11 @@ public class Main extends ApplicationAdapter {
                     break;
                 }
             } catch (IOException e) {
-                System.err.println("Error: Failed to run msdf-atlas-gen: " + e.getMessage());
-                if (SharedLibraryLoader.os == Os.MacOsX) {
-                    System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
-                    System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
-                }
+                CliMessages.printBinaryRunFailed("msdf-atlas-gen", e.getMessage(), SharedLibraryLoader.os);
                 System.exit(1);
                 break;
             } catch (InterruptedException e) {
-                System.err.println("Error: msdf-atlas-gen was interrupted: " + e.getMessage());
+                CliMessages.printBinaryInterrupted("msdf-atlas-gen", e.getMessage());
                 System.exit(1);
                 break;
             }
@@ -555,18 +405,14 @@ public class Main extends ApplicationAdapter {
         try {
             int exitCode = builder.start().waitFor();
             if (exitCode != 0) {
-                System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
+                CliMessages.printBinaryExitFailure("oxipng", exitCode);
                 System.exit(exitCode);
             }
         } catch (IOException e) {
-            System.err.println("Error: Failed to run oxipng: " + e.getMessage());
-            if (SharedLibraryLoader.os == Os.MacOsX) {
-                System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
-                System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
-            }
+            CliMessages.printBinaryRunFailed("oxipng", e.getMessage(), SharedLibraryLoader.os);
             System.exit(1);
         } catch (InterruptedException e) {
-            System.err.println("Error: oxipng was interrupted: " + e.getMessage());
+            CliMessages.printBinaryInterrupted("oxipng", e.getMessage());
             System.exit(1);
         }
         if (fullPreview) {
@@ -576,18 +422,14 @@ public class Main extends ApplicationAdapter {
             try {
                 int exitCode = builder.start().waitFor();
                 if (exitCode != 0) {
-                    System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
+                    CliMessages.printBinaryExitFailure("oxipng", exitCode);
                     System.exit(exitCode);
                 }
             } catch (IOException e) {
-                System.err.println("Error: Failed to run oxipng: " + e.getMessage());
-                if (SharedLibraryLoader.os == Os.MacOsX) {
-                    System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
-                    System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
-                }
+                CliMessages.printBinaryRunFailed("oxipng", e.getMessage(), SharedLibraryLoader.os);
                 System.exit(1);
             } catch (InterruptedException e) {
-                System.err.println("Error: oxipng was interrupted: " + e.getMessage());
+                CliMessages.printBinaryInterrupted("oxipng", e.getMessage());
                 System.exit(1);
             }
 
@@ -655,7 +497,7 @@ public class Main extends ApplicationAdapter {
             FileHandle parentDir = Gdx.files.absolute(parentPath);
             if (!parentDir.exists()) parentDir = Gdx.files.local(parentPath);
             if (!parentDir.exists() || !parentDir.isDirectory()) {
-                System.err.println("Error: parent directory '" + parentPath + "' does not exist.");
+                CliMessages.printLangParentMissing(parentPath);
                 return null;
             }
 
@@ -668,8 +510,7 @@ public class Main extends ApplicationAdapter {
 
             FileHandle[] matched = parentDir.list((d, name) -> name.matches(regex));
             if (matched == null || matched.length == 0) {
-                System.err.println("Error: no files matched pattern '" + globPattern
-                        + "' in '" + parentDir.path() + "'.");
+                CliMessages.printLangGlobNoMatch(globPattern, parentDir.path());
             } else {
                 System.out.println("  Matched " + matched.length + " file(s) from pattern '" + langPath + "'.");
             }
@@ -681,7 +522,7 @@ public class Main extends ApplicationAdapter {
         if (!resolved.exists()) resolved = Gdx.files.local(langPath);
 
         if (!resolved.exists()) {
-            System.err.println("Error: --lang path '" + langPath + "' does not exist.");
+            CliMessages.printLangPathMissing(langPath);
             return null;
         }
 
@@ -694,7 +535,7 @@ public class Main extends ApplicationAdapter {
         // --- Mode 3: Folder — read all files in the directory ---
         FileHandle[] langFiles = resolved.list((d, name) -> !name.startsWith("."));
         if (langFiles == null || langFiles.length == 0) {
-            System.err.println("Error: no files found in folder '" + langPath + "'.");
+            CliMessages.printLangFolderEmpty(langPath);
         } else {
             System.out.println("  Found " + langFiles.length + " file(s) in folder '" + langPath + "'.");
         }
@@ -823,18 +664,14 @@ public class Main extends ApplicationAdapter {
         try {
             int exitCode = builder.start().waitFor();
             if (exitCode != 0) {
-                System.out.println("oxipng failed, returning exit code " + exitCode + "; terminating.");
+                CliMessages.printBinaryExitFailure("oxipng", exitCode);
                 System.exit(exitCode);
             }
         } catch (IOException e) {
-            System.err.println("Error: Failed to run oxipng: " + e.getMessage());
-            if (SharedLibraryLoader.os == Os.MacOsX) {
-                System.err.println("On macOS, the binary may have been blocked by Gatekeeper.");
-                System.err.println("Open System Settings -> Privacy & Security and look for a prompt to allow it.");
-            }
+            CliMessages.printBinaryRunFailed("oxipng", e.getMessage(), SharedLibraryLoader.os);
             System.exit(1);
         } catch (InterruptedException e) {
-            System.err.println("Error: oxipng was interrupted: " + e.getMessage());
+            CliMessages.printBinaryInterrupted("oxipng", e.getMessage());
             System.exit(1);
         }
     }
