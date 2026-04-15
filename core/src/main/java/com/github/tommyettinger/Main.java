@@ -197,7 +197,7 @@ public class Main extends ApplicationAdapter {
             //   1. Glob pattern  — contains * or ? → match files against the pattern
             //   2. Single file   — path points to an existing file → read that one file
             //   3. Folder        — path points to a directory → read all files in it
-            FileHandle[] langFiles = resolveLangFiles(config.langPath);
+            FileHandle[] langFiles = LangFileResolver.resolve(config.langPath);
 
             if (langFiles != null && langFiles.length > 0) {
                 for (FileHandle f : langFiles) {
@@ -382,89 +382,6 @@ public class Main extends ApplicationAdapter {
                 System.out.println("  " + colorPreview.file().getAbsolutePath());
             }
         }
-    }
-
-    /**
-     * Resolves the --lang value into an array of files to read.
-     * Three modes are supported:
-     * <ol>
-     *   <li><b>Glob pattern</b> (contains {@code *} or {@code ?}):
-     *       The parent directory is listed and filenames are matched
-     *       against the glob portion. Example: {@code "i18n/*.txt"},
-     *       {@code "i18n/*"}.</li>
-     *   <li><b>Single file</b> (path points to an existing file):
-     *       Returns an array with just that one file.</li>
-     *   <li><b>Folder</b> (path points to an existing directory):
-     *       Reads all files in that directory (excluding hidden
-     *       dot-files). Equivalent to passing the folder with "/*".</li>
-     * </ol>
-     *
-     * @param langPath the raw --lang value from the user
-     * @return matched files, or null/empty if nothing was found
-     */
-    private FileHandle[] resolveLangFiles(String langPath) {
-        // --- Mode 1: Glob pattern (contains * or ?) ---
-        if (langPath.contains("*") || langPath.contains("?")) {
-            // Split into parent directory + filename pattern.
-            // e.g. "i18n/*.txt" → parent="i18n", pattern="*.txt"
-            // e.g. "i18n/*"          → parent="i18n", pattern="*"
-            int lastSep = Math.max(langPath.lastIndexOf('/'), langPath.lastIndexOf('\\'));
-            String parentPath;
-            String globPattern;
-            if (lastSep >= 0) {
-                parentPath = langPath.substring(0, lastSep);
-                globPattern = langPath.substring(lastSep + 1);
-            } else {
-                parentPath = ".";
-                globPattern = langPath;
-            }
-
-            FileHandle parentDir = Gdx.files.absolute(parentPath);
-            if (!parentDir.exists()) parentDir = Gdx.files.local(parentPath);
-            if (!parentDir.exists() || !parentDir.isDirectory()) {
-                CliMessages.printLangParentMissing(parentPath);
-                return null;
-            }
-
-            // Convert glob to regex: escape dots, * → .*, ? → .
-            final String regex = "^" + globPattern
-                    .replace(".", "\\.")
-                    .replace("*", ".*")
-                    .replace("?", ".")
-                    + "$";
-
-            FileHandle[] matched = parentDir.list((d, name) -> name.matches(regex));
-            if (matched == null || matched.length == 0) {
-                CliMessages.printLangGlobNoMatch(globPattern, parentDir.path());
-            } else {
-                System.out.println("  Matched " + matched.length + " file(s) from pattern '" + langPath + "'.");
-            }
-            return matched;
-        }
-
-        // --- Mode 2 & 3: resolve as absolute or local path ---
-        FileHandle resolved = Gdx.files.absolute(langPath);
-        if (!resolved.exists()) resolved = Gdx.files.local(langPath);
-
-        if (!resolved.exists()) {
-            CliMessages.printLangPathMissing(langPath);
-            return null;
-        }
-
-        // --- Mode 2: Single file ---
-        if (!resolved.isDirectory()) {
-            System.out.println("  Using single file: " + resolved.path());
-            return new FileHandle[]{resolved};
-        }
-
-        // --- Mode 3: Folder — read all files in the directory ---
-        FileHandle[] langFiles = resolved.list((d, name) -> !name.startsWith("."));
-        if (langFiles == null || langFiles.length == 0) {
-            CliMessages.printLangFolderEmpty(langPath);
-        } else {
-            System.out.println("  Found " + langFiles.length + " file(s) in folder '" + langPath + "'.");
-        }
-        return langFiles;
     }
 
     /**
