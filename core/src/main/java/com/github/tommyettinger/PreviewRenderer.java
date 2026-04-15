@@ -33,7 +33,7 @@ import java.util.List;
  * application run, after the GL context is ready.
  * <p>
  * After rendering, the captured pixels are written to
- * {@code previews/&lt;fontName&gt;-&lt;mode&gt;.png} and then optimized
+ * {@code previews/[fontName]-[mode].png} and then optimized
  * in place with oxipng via {@link BinaryExec#runOrExit}.
  */
 final class PreviewRenderer implements Disposable {

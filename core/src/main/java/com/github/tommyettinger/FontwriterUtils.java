@@ -53,7 +53,7 @@ final class FontwriterUtils {
             // Try to parse named color
             ColorLookup lookup = ColorLookup.DESCRIPTIVE;
             int namedColor = lookup.getRgba(str);
-            if (namedColor != 256) {
+            if (namedColor != Main.NO_COLOR_OVERRIDE) {
                 return namedColor;
             }
             // Try to parse hex
