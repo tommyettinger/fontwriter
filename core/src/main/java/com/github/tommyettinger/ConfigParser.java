@@ -16,7 +16,7 @@ package com.github.tommyettinger;
  * the first three starts with "-", named-flag mode is used; otherwise
  * legacy positional mode is assumed.
  * <p>
- * Special commands ({@code --bulk}, {@code --preview}, {@code --ubj},
+ * Batch commands ({@code --bulk}, {@code --preview}, {@code --ubj},
  * {@code --lzma}) are detected first and short-circuit the rest of
  * the parsing.
  */

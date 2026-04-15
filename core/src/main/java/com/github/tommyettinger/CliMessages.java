@@ -149,8 +149,8 @@ final class CliMessages {
         System.out.println("  java -jar " + jar + " <font> <mode> <size> [WxH] [color] [langPath]");
         System.out.println();
 
-        // --- Special commands ---
-        System.out.println("Special commands:");
+        // --- Batch commands ---
+        System.out.println("Batch commands:");
         System.out.println("  --bulk [folder]      Process every .ttf/.otf in folder (default: 'input').");
         System.out.println("  --preview [folder]   Generate previews for .json fonts (default: 'fonts').");
         System.out.println("  --ubj [folder]       Convert .json fonts to .ubj + .ubj.lzma (default: 'fonts').");

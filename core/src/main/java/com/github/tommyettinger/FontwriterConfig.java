@@ -16,7 +16,7 @@ import java.util.Locale;
  *   java -jar fontwriter.jar MyFont.otf msdf 60 --lang i18n/de --color black
  *   java -jar fontwriter.jar MyFont.otf sdf 200 --charset latin
  * </pre>
- * <b>Usage (special commands):</b>
+ * <b>Usage (batch commands):</b>
  * <pre>
  *   java -jar fontwriter.jar --bulk [folder]
  *   java -jar fontwriter.jar --preview [folder]
