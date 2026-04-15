@@ -113,58 +113,64 @@ public class Main extends ApplicationAdapter {
     }
 
     private void runSpecialCommand() {
-        String command = config.specialCommand;
+        FontwriterConfig.SpecialCommand command = config.specialCommand;
+        String inPath = config.resolveSpecialCommandPath();
 
-        if ("bulk".equals(command)) {
-            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "input";
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                    (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
-            FontwriterConfig.Mode[] fields = {FontwriterConfig.Mode.STANDARD, FontwriterConfig.Mode.SDF, FontwriterConfig.Mode.MSDF};
-            for (FileHandle file : files) {
-                for (FontwriterConfig.Mode field : fields) {
-                    FontwriterConfig bulkConfig = new FontwriterConfig();
-                    bulkConfig.fontPath = file.path();
-                    bulkConfig.mode = field;
-                    if (file.name().startsWith("Go-Noto")) {
-                        bulkConfig.initialSize = "30";
-                        bulkConfig.imageSize = "4096x4096";
-                    } else {
-                        bulkConfig.initialSize = "280";
-                        bulkConfig.imageSize = "2048x2048";
+        switch (command) {
+            case BULK: {
+                FileHandle[] files = Gdx.files.local(inPath).list(
+                        (dir, name) -> name.endsWith("ttf") || name.endsWith("otf"));
+                FontwriterConfig.Mode[] modes = {FontwriterConfig.Mode.STANDARD, FontwriterConfig.Mode.SDF, FontwriterConfig.Mode.MSDF};
+                for (FileHandle file : files) {
+                    for (FontwriterConfig.Mode m : modes) {
+                        FontwriterConfig bulkConfig = new FontwriterConfig();
+                        bulkConfig.fontPath = file.path();
+                        bulkConfig.mode = m;
+                        if (file.name().startsWith("Go-Noto")) {
+                            bulkConfig.initialSize = "30";
+                            bulkConfig.imageSize = "4096x4096";
+                        } else {
+                            bulkConfig.initialSize = "280";
+                            bulkConfig.imageSize = "2048x2048";
+                        }
+                        bulkConfig.color = "black";
+                        this.config = bulkConfig;
+                        mainProcess();
                     }
-                    bulkConfig.color = "black";
-                    this.config = bulkConfig;
-                    mainProcess();
                 }
+                break;
             }
-        } else if ("preview".equals(command)) {
-            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "fonts";
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                    (dir, name) -> name.endsWith("json"));
-            for (FileHandle file : files) {
-                String filePath = file.path().substring(0, file.path().lastIndexOf('-'));
-                String fileMode = file.nameWithoutExtension().substring(file.nameWithoutExtension().lastIndexOf('-') + 1);
-                String fontName = filePath.substring(Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\')) + 1);
+            case PREVIEW: {
+                FileHandle[] files = Gdx.files.local(inPath).list(
+                        (dir, name) -> name.endsWith("json"));
+                for (FileHandle file : files) {
+                    String filePath = file.path().substring(0, file.path().lastIndexOf('-'));
+                    String fileMode = file.nameWithoutExtension().substring(file.nameWithoutExtension().lastIndexOf('-') + 1);
+                    String fontName = filePath.substring(Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\')) + 1);
 
-                FontwriterConfig previewConfig = new FontwriterConfig();
-                previewConfig.fontPath = filePath;
-                previewConfig.mode = FontwriterConfig.Mode.fromString(fileMode);
-                this.config = previewConfig;
-                makePreview(inPath + "/", fontName);
+                    FontwriterConfig previewConfig = new FontwriterConfig();
+                    previewConfig.fontPath = filePath;
+                    previewConfig.mode = FontwriterConfig.Mode.fromString(fileMode);
+                    this.config = previewConfig;
+                    makePreview(inPath + "/", fontName);
+                }
+                break;
             }
-        } else if ("ubj".equals(command)) {
-            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "fonts";
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                    (dir, name) -> name.endsWith("json"));
-            for (FileHandle file : files) {
-                convertToUBJSON(file);
+            case UBJ: {
+                FileHandle[] files = Gdx.files.local(inPath).list(
+                        (dir, name) -> name.endsWith("json"));
+                for (FileHandle file : files) {
+                    convertToUBJSON(file);
+                }
+                break;
             }
-        } else if ("lzma".equals(command)) {
-            String inPath = config.specialCommandPath != null ? config.specialCommandPath : "fonts";
-            FileHandle[] files = Gdx.files.local(inPath).list(
-                    (dir, name) -> name.endsWith("json"));
-            for (FileHandle file : files) {
-                convertToLzma(file);
+            case LZMA: {
+                FileHandle[] files = Gdx.files.local(inPath).list(
+                        (dir, name) -> name.endsWith("json"));
+                for (FileHandle file : files) {
+                    convertToLzma(file);
+                }
+                break;
             }
         }
     }

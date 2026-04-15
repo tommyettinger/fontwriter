@@ -57,9 +57,9 @@ public class ConfigParser {
         }
 
         // --- Special commands ---
-        if ("--bulk".equals(first) || "--preview".equals(first)
-                || "--ubj".equals(first) || "--lzma".equals(first)) {
-            config.specialCommand = first.substring(2); // strip "--"
+        FontwriterConfig.SpecialCommand special = FontwriterConfig.SpecialCommand.fromFlag(first);
+        if (special != null) {
+            config.specialCommand = special;
             if (args.length > 1) {
                 config.specialCommandPath = args[1];
             }
