@@ -16,13 +16,9 @@ import com.github.tommyettinger.textra.utils.LZBCompression;
 import com.github.tommyettinger.textra.utils.StringUtils;
 
 import java.io.*;
-import java.lang.StringBuilder;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import static java.awt.Font.TRUETYPE_FONT;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
@@ -168,107 +164,7 @@ public class Main extends ApplicationAdapter {
         }
         String fontName = fontHandle.nameWithoutExtension();
         FileHandle cmap = fontHandle.sibling(fontHandle.name() + ".cmap.txt");
-        int cmapLength;
-
-        // ---------------------------------------------------------------
-        //  Character set resolution — fallback hierarchy:
-        //
-        //  1. --charset given  → use that predefined set
-        //  2. --lang given     → extract chars from matched files (folder, glob, or file)
-        //                        (plus ASCII 32–126 baseline)
-        //  3. neither given    → all visible chars (codepoints 32–65535)
-        //
-        //  See FontwriterConfig.resolveCharsetStrategy() for the logic.
-        // ---------------------------------------------------------------
-        FontwriterConfig.CharsetStrategy charsetStrategy = config.resolveCharsetStrategy();
-        IntSet charSet = new IntSet(65536);
-
-        if (charsetStrategy == FontwriterConfig.CharsetStrategy.PRESET) {
-            System.out.println("Building character map from predefined charset: " + config.charset + "...");
-            populateCharset(charSet, config.charset);
-        } else if (charsetStrategy == FontwriterConfig.CharsetStrategy.LANG) {
-            System.out.println("Building character map from I18N source: " + config.langPath + "...");
-            // Baseline: ASCII + extended ASCII (32–255)
-            for (int i = 32; i <= 255; i++) {
-                charSet.add(i);
-            }
-
-            // --lang accepts three forms:
-            //   1. Glob pattern  — contains * or ? → match files against the pattern
-            //   2. Single file   — path points to an existing file → read that one file
-            //   3. Folder        — path points to a directory → read all files in it
-            FileHandle[] langFiles = LangFileResolver.resolve(config.langPath);
-
-            if (langFiles != null && langFiles.length > 0) {
-                for (FileHandle f : langFiles) {
-                    try {
-                        String content = f.readString("UTF-8");
-                        for (int i = 0; i < content.length(); i++) {
-                            charSet.add(content.charAt(i));
-                        }
-                        System.out.println("  Read " + f.path() + " (" + content.length() + " chars)");
-                    } catch (Exception e) {
-                        System.err.println("Failed to read " + f.path() + ": " + e.getMessage());
-                    }
-                }
-                System.out.println("  Unique characters found: " + charSet.size);
-            } else {
-                CliMessages.printLangNoMatches(config.langPath);
-                System.exit(1);
-            }
-        } else {
-            // "all" — no --charset, no --lang: include every character in the font.
-            System.out.println("Building character map from all visible characters in the font...");
-            for (int i = 32; i < 65536; i++) {
-                charSet.add(i);
-            }
-        }
-
-        // Weird/control chars to exclude
-        int[] weirdChars =
-            {0x200C, 0x200D, 0x200E, 0x200F, 0x2028, 0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x206A,
-                0x206B, 0x206C, 0x206D, 0x206E, 0x206F};
-
-        // Filter only displayable characters
-        IntArray displayableChars = new IntArray(charSet.size);
-        // If there are a lot of chars, don't report every one that this can't display.
-        boolean reasonableCharMap = charSet.size < 10000;
-        try {
-            java.awt.Font af = java.awt.Font.createFont(TRUETYPE_FONT, new File(fontFileName));
-            IntSet.IntSetIterator iter = charSet.iterator();
-            while (iter.hasNext) {
-                int code = iter.next();
-                // Skip control chars and weird formatting chars
-                if (code < 32 || (code >= 0x7F && code <= 0x9F) ||         /* C1 controls */
-                    Arrays.binarySearch(weirdChars, code) >= 0) {
-                    continue;
-                }
-
-                if (af.canDisplay(code)) {
-                    displayableChars.add(code);
-                } else if (reasonableCharMap) {
-                    char ch = (char) code;
-                    String printable = (ch >= 32 && ch <= 126) ? String.valueOf(ch) : "\\u" + String.format("%04X", code);
-                    System.out.println("Font cannot display code " + code + " (" + printable + ")");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        // Build final string without trailing space
-        StringBuilder sb = new StringBuilder(4096);
-
-        for (int i = 0, n = displayableChars.size; i < n; i++) {
-            sb.append(displayableChars.get(i));
-            if (i + 1 < n) {
-                sb.append(' ');
-            }
-        }
-
-        cmap.writeString(sb.toString(), false, "UTF-8");
-        cmapLength = sb.length();
+        int cmapLength = CharMapBuilder.build(config, fontFileName, cmap);
         long size = Math.round(Double.parseDouble(config.initialSize));
         size = Math.min(cmapLength >= 30000 ? 55 : 280, size);
         String imageSize = config.resolveImageSize(cmapLength);
@@ -381,71 +277,6 @@ public class Main extends ApplicationAdapter {
             if (colorPreview.exists()) {
                 System.out.println("  " + colorPreview.file().getAbsolutePath());
             }
-        }
-    }
-
-    /**
-     * Populates the given IntSet with codepoints for a predefined charset.
-     * Every set includes ASCII 32–126 as a baseline.
-     *
-     * @param charSet the set to populate (not cleared first)
-     * @param charset the predefined charset to apply
-     */
-    private static void populateCharset(IntSet charSet, FontwriterConfig.Charset charset) {
-        // ASCII baseline (32–126) — always included
-        for (int i = 32; i <= 126; i++) {
-            charSet.add(i);
-        }
-
-        switch (charset) {
-            case ASCII:
-                // Already done above
-                break;
-
-            case LATIN:
-                // Latin-1 Supplement (160–255) + Latin Extended-A (256–383)
-                for (int i = 160; i <= 383; i++) {
-                    charSet.add(i);
-                }
-                break;
-
-            case LATIN_EXT:
-                // Latin-1 Supplement (160–255) + Latin Extended-A (256–383)
-                // + Latin Extended-B (384–591) + Latin Extended Additional (7680–7935)
-                for (int i = 160; i <= 591; i++) {
-                    charSet.add(i);
-                }
-                for (int i = 7680; i <= 7935; i++) {
-                    charSet.add(i);
-                }
-                break;
-
-            case CYRILLIC:
-                // Latin (160–383) + Cyrillic (1024–1279)
-                for (int i = 160; i <= 383; i++) {
-                    charSet.add(i);
-                }
-                for (int i = 1024; i <= 1279; i++) {
-                    charSet.add(i);
-                }
-                break;
-
-            case GREEK:
-                // Latin (160–383) + Greek and Coptic (880–1023)
-                for (int i = 160; i <= 383; i++) {
-                    charSet.add(i);
-                }
-                for (int i = 880; i <= 1023; i++) {
-                    charSet.add(i);
-                }
-                break;
-
-            case ALL:
-            default:
-                for (int i = 32; i < 65536; i++) {
-                    charSet.add(i);
-                }
-                break;
         }
     }
 
