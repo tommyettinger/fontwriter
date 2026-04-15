@@ -8,12 +8,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.*;
-import com.badlogic.gdx.utils.compression.Lzma;
-import com.github.tommyettinger.textra.ColorLookup;
 import com.github.tommyettinger.textra.Font;
 import com.github.tommyettinger.textra.Layout;
 import com.github.tommyettinger.textra.utils.LZBCompression;
-import com.github.tommyettinger.textra.utils.StringUtils;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -140,7 +137,7 @@ public class Main extends ApplicationAdapter {
                 FileHandle[] files = Gdx.files.local(inPath).list(
                         (dir, name) -> name.endsWith("json"));
                 for (FileHandle file : files) {
-                    convertToUBJSON(file);
+                    FontwriterUtils.convertToUBJSON(file);
                 }
                 break;
             }
@@ -148,7 +145,7 @@ public class Main extends ApplicationAdapter {
                 FileHandle[] files = Gdx.files.local(inPath).list(
                         (dir, name) -> name.endsWith("json"));
                 for (FileHandle file : files) {
-                    convertToLzma(file);
+                    FontwriterUtils.convertToLzma(file);
                 }
                 break;
             }
@@ -171,7 +168,7 @@ public class Main extends ApplicationAdapter {
         boolean fullPreview = config.hasPreviewColor();
         int fullPreviewColor;
         if (fullPreview)
-            fullPreviewColor = stringToColor(config.color);
+            fullPreviewColor = FontwriterUtils.stringToColor(config.color);
         else {
             fullPreviewColor = -1;
         }
@@ -222,8 +219,8 @@ public class Main extends ApplicationAdapter {
 
         System.out.println("Compressing .JSON file (optional)...");
         FileHandle jsonHandle = Gdx.files.local("fonts/" + fontName + "-" + mode + ".json");
-        convertToUBJSON(jsonHandle);
-        convertToLzma(jsonHandle);
+        FontwriterUtils.convertToUBJSON(jsonHandle);
+        FontwriterUtils.convertToLzma(jsonHandle);
         ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
         Gdx.files.local("fonts/" + fontName + "-" + mode + ".dat").writeBytes(ba.items, 0, ba.size, false);
 
@@ -329,75 +326,6 @@ public class Main extends ApplicationAdapter {
         System.out.println("Running command: " + String.join(" ", oxiCmd));
         BinaryExec.runOrExit(archPath + oxipngBinary, "oxipng", oxiCmd,
                 new File(Gdx.files.getLocalStoragePath()));
-    }
-
-    private void convertToUBJSON(FileHandle inFile){
-        try {
-            FileHandle
-                outFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj"),
-                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj.lzma");
-            UBJsonWriter ubWriter = new UBJsonWriter(outFile.write(false));
-            ubWriter.value(new JsonReader().parse(inFile));
-            ubWriter.close();
-
-            BufferedInputStream bais = new BufferedInputStream(outFile.read());
-            OutputStream lzmaOut = outLzmaFile.write(false);
-            Lzma.compress(bais, lzmaOut);
-            lzmaOut.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void convertToLzma(FileHandle inFile){
-        try {
-            FileHandle outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".json.lzma");
-
-            BufferedInputStream bais = new BufferedInputStream(inFile.read());
-            OutputStream lzmaOut = outLzmaFile.write(false);
-            Lzma.compress(bais, lzmaOut);
-            lzmaOut.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private int stringToColor(String str) {
-        if (str != null) {
-            // Try to parse named color
-            ColorLookup lookup = ColorLookup.DESCRIPTIVE;
-            int namedColor = lookup.getRgba(str);
-            if (namedColor != 256) {
-                return namedColor;
-            }
-            // Try to parse hex
-            if (str.length() >= 3) {
-                if (str.startsWith("#")) {
-                    if (str.length() >= 9) return StringUtils.intFromHex(str, 1, 9);
-                    if (str.length() >= 7) return StringUtils.intFromHex(str, 1, 7) << 8 | 0xFF;
-                    if (str.length() >= 4) {
-                        int rgb = StringUtils.intFromHex(str, 1, 4);
-                        return
-                                (rgb << 20 & 0xF0000000) | (rgb << 16 & 0x0F000000) |
-                                        (rgb << 16 & 0x00F00000) | (rgb << 12 & 0x000F0000) |
-                                        (rgb << 12 & 0x0000F000) | (rgb <<  8 & 0x00000F00) |
-                                        0xFF;
-                    }
-                } else {
-                    if (str.length() >= 8) return StringUtils.intFromHex(str, 0, 8);
-                    if (str.length() >= 6) return StringUtils.intFromHex(str, 0, 6) << 8 | 0xFF;
-                    int rgb = StringUtils.intFromHex(str, 0, 3);
-                    return
-                            (rgb << 20 & 0xF0000000) | (rgb << 16 & 0x0F000000) |
-                                    (rgb << 16 & 0x00F00000) | (rgb << 12 & 0x000F0000) |
-                                    (rgb << 12 & 0x0000F000) | (rgb <<  8 & 0x00000F00) |
-                                    0xFF;
-                }
-            }
-        }
-
-        return -1; // white
-
     }
 
     private void process (FileHandle file) {
