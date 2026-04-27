@@ -71,8 +71,8 @@ final class CharMapBuilder {
             populateCharset(charSet, config.charset);
         } else if (charsetStrategy == FontwriterConfig.CharsetStrategy.LANG) {
             System.out.println("Building character map from I18N source: " + config.langPath + "...");
-            // Baseline: ASCII + extended ASCII (32–255)
-            for (int i = 32; i <= 255; i++) {
+            // Baseline: ASCII (32–126)
+            for (int i = 32; i <= 126; i++) {
                 charSet.add(i);
             }
 

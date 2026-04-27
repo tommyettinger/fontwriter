@@ -16,7 +16,7 @@ import com.badlogic.gdx.utils.Os;
  */
 final class CliMessages {
 
-    private static final String JAR_NAME = "fontwriter-2.2.14.0.jar";
+    private static final String JAR_NAME = "fontwriter-2.2.16.0-SNAPSHOT.jar";
 
     private CliMessages() {} // utility class — not instantiable
 

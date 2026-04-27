@@ -361,7 +361,7 @@ public class FontwriterConfig {
      *       reads only that one file.</li>
      * </ul>
      * In every case, all characters found in the matched files (plus
-     * ASCII 32–255 as a baseline) are included in the generated font.
+     * ASCII 32–126 as a baseline) are included in the generated font.
      * <p>
      * If the path does not exist, the pattern matches no files, or the
      * folder is empty, the program exits with an error. There is no
