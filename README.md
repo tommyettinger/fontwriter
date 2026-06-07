@@ -78,10 +78,10 @@ in the file. BitmapFont doesn't store any info about distance fields in its file
 This has always worked on Windows, but now we have a working release for macOS (x64 and arm64) and Linux (x64)!
 
 If you have the JAR from the releases, unzip it so the other files it came with are all in the same folder
-structure. Then, you can enter the directory with that holds `fontwriter-2.2.14.0.jar` and run
-`java -jar fontwriter-2.2.14.0.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
+structure. Then, you can enter the directory with that holds `fontwriter-2.4.0.0.jar` and run
+`java -jar fontwriter-2.4.0.0.jar "MyFont.ttf" standard 60` , where "MyFont.ttf" can be any path to a .ttf file
 or an .otf file (.ttc may work). "MyFont.ttf" doesn't have to be in the same folder if you give it an absolute
-path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.2.14.0.jar ` to enter its
+path (on Windows, you can drag and drop a file after typing `java -jar fontwriter-2.4.0.0.jar ` to enter its
 absolute path). The second parameter, `standard`, can also be `sdf` or `msdf`. You might just want `standard`
 for many reasons; even though it won't scale up nicely, it will scale down fairly well, and you can
 interchange `standard` fonts using FontFamily or using colorful emoji. On the other hand is `msdf`, which
@@ -153,7 +153,7 @@ your project, it is suggested to put them in their own folder or folders and spe
 rather than relying on having a mix of I18N and font files in one folder.
 
 Regardless of which extra arguments you use or not, you must specify at least a font file, distance field
-mode, and size. The rest assumes you ran `java -jar fontwriter-2.2.14.0.jar "MyFont.ttf" standard 60`
+mode, and size. The rest assumes you ran `java -jar fontwriter-2.4.0.0.jar "MyFont.ttf" standard 60`
 without optional parameters, unless specified.
 
 Running that command will try the size you give it first, and if it can't fit all chars in the font into
