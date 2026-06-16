@@ -285,10 +285,12 @@ public class Main extends ApplicationAdapter {
         // --- Summary: list all generated files with full paths ---
         System.out.println();
         System.out.println("Done! Generated files:");
-        String basePath = "fonts/" + fontName + "-" + mode;
-        String[] extensions = {".png", ".json", ".dat", ".ubj", ".json.lzma", ".ubj.lzma"};
+        String basePath = "fonts/";
+        String ubjPath = "fonts/ubj/";
+        String nameAndMode = fontName + "-" + mode;
+        String[] extensions = {".png", ".json", ".json.lzma", ".dat", ".ubj", ".ubj.lzma"};
         for (String ext : extensions) {
-            FileHandle f = Gdx.files.local(basePath + ext);
+            FileHandle f = Gdx.files.local((ext.contains("ubj") ? ubjPath : basePath) + nameAndMode + ext);
             if (f.exists()) {
                 System.out.println("  " + f.file().getAbsolutePath());
             }

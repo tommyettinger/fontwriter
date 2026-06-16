@@ -96,9 +96,11 @@ final class FontwriterUtils {
      */
     public static void convertToUBJSON(FileHandle inFile) {
         try {
+            FileHandle ubjDir = inFile.sibling("ubj/");
+            ubjDir.mkdirs();
             FileHandle
-                outFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj"),
-                outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".ubj.lzma");
+                outFile = ubjDir.child(inFile.nameWithoutExtension() + ".ubj"),
+                outLzmaFile = ubjDir.child(inFile.nameWithoutExtension() + ".ubj.lzma");
             UBJsonWriter ubWriter = new UBJsonWriter(outFile.write(false));
             ubWriter.value(new JsonReader().parse(inFile));
             ubWriter.close();

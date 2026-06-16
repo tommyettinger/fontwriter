@@ -83,7 +83,7 @@ final class PreviewRenderer implements Disposable {
 
     /**
      * Renders a preview for the given font and writes it to
-     * {@code previews/&lt;fontName&gt;-&lt;mode&gt;.png}, then runs
+     * {@code previews/<fontName>-<mode>.png}, then runs
      * oxipng over the result.
      *
      * @param config   configuration for this particular font (used
