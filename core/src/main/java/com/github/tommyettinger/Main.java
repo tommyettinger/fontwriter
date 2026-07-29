@@ -245,6 +245,7 @@ public class Main extends ApplicationAdapter {
         FileHandle jsonHandle = Gdx.files.local("fonts/" + fontName + "-" + mode + ".json");
         FontwriterUtils.convertToUBJSON(jsonHandle);
         FontwriterUtils.convertToLzma(jsonHandle);
+        FontwriterUtils.convertToLzmaTruncated(jsonHandle);
         ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
         Gdx.files.local("fonts/" + fontName + "-" + mode + ".dat").writeBytes(ba.items, 0, ba.size, false);
 
@@ -287,22 +288,28 @@ public class Main extends ApplicationAdapter {
         System.out.println("Done! Generated files:");
         String basePath = "fonts/";
         String ubjPath = "fonts/ubj/";
+        String truncatedPath = "fonts/truncated/";
         String nameAndMode = fontName + "-" + mode;
         String[] extensions = {".png", ".json", ".json.lzma", ".dat", ".ubj", ".ubj.lzma"};
         for (String ext : extensions) {
             FileHandle f = Gdx.files.local((ext.contains("ubj") ? ubjPath : basePath) + nameAndMode + ext);
             if (f.exists()) {
-                System.out.println("  " + f.file().getAbsolutePath());
+                System.out.println("  " + f.file().getAbsolutePath() + " (" + f.length() + " bytes)");
             }
         }
+        FileHandle truncatedFile = Gdx.files.local(truncatedPath + nameAndMode + ".json.lzma");
+        if (truncatedFile.exists()) {
+            System.out.println("  " + truncatedFile.file().getAbsolutePath() + " (" + truncatedFile.length() + " bytes)");
+        }
+
         FileHandle previewFile = Gdx.files.local("previews/" + fontName + "-" + mode + ".png");
         if (previewFile.exists()) {
-            System.out.println("  " + previewFile.file().getAbsolutePath());
+            System.out.println("  " + previewFile.file().getAbsolutePath() + " (" + previewFile.length() + " bytes)");
         }
         if (fullPreview) {
             FileHandle colorPreview = Gdx.files.local("previews/full-" + config.color + "-" + fontName + "-" + mode + ".png");
             if (colorPreview.exists()) {
-                System.out.println("  " + colorPreview.file().getAbsolutePath());
+                System.out.println("  " + colorPreview.file().getAbsolutePath() + " (" + colorPreview.length() + " bytes)");
             }
         }
     }
