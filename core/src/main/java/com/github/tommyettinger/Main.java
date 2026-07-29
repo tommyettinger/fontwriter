@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.*;
 import com.github.tommyettinger.textra.utils.LZBCompression;
 
@@ -168,6 +169,7 @@ public class Main extends ApplicationAdapter {
      * and reads back the GL back buffer.
      */
     public void mainProcess() {
+        long startTime = TimeUtils.millis();
         // [1] Resolve font file handle (absolute path preferred, local fallback)
         String fontFileName = config.fontPath;
         FontwriterConfig.Mode mode = config.mode;
@@ -245,7 +247,8 @@ public class Main extends ApplicationAdapter {
         FileHandle jsonHandle = Gdx.files.local("fonts/" + fontName + "-" + mode + ".json");
         FontwriterUtils.convertToUBJSON(jsonHandle);
         FontwriterUtils.convertToLzma(jsonHandle);
-        FontwriterUtils.convertToLzmaTruncated(jsonHandle);
+        // Remove truncated mode unless we find a good usage for it.
+//        FontwriterUtils.convertToLzmaTruncated(jsonHandle);
         ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
         Gdx.files.local("fonts/" + fontName + "-" + mode + ".dat").writeBytes(ba.items, 0, ba.size, false);
 
@@ -285,10 +288,9 @@ public class Main extends ApplicationAdapter {
         // [10] Print a summary listing every file produced for this font
         // --- Summary: list all generated files with full paths ---
         System.out.println();
-        System.out.println("Done! Generated files:");
+        System.out.println("Done! Took " + (TimeUtils.timeSinceMillis(startTime)) + " ms and generated files:");
         String basePath = "fonts/";
         String ubjPath = "fonts/ubj/";
-        String truncatedPath = "fonts/truncated/";
         String nameAndMode = fontName + "-" + mode;
         String[] extensions = {".png", ".json", ".json.lzma", ".dat", ".ubj", ".ubj.lzma"};
         for (String ext : extensions) {
@@ -297,10 +299,12 @@ public class Main extends ApplicationAdapter {
                 System.out.println("  " + f.file().getAbsolutePath() + " (" + f.length() + " bytes)");
             }
         }
-        FileHandle truncatedFile = Gdx.files.local(truncatedPath + nameAndMode + ".json.lzma");
-        if (truncatedFile.exists()) {
-            System.out.println("  " + truncatedFile.file().getAbsolutePath() + " (" + truncatedFile.length() + " bytes)");
-        }
+        // If we decide to bring back the truncated json.lzma mode, it's here.
+//        String truncatedPath = "fonts/truncated/";
+//        FileHandle truncatedFile = Gdx.files.local(truncatedPath + nameAndMode + ".json.lzma");
+//        if (truncatedFile.exists()) {
+//            System.out.println("  " + truncatedFile.file().getAbsolutePath() + " (" + truncatedFile.length() + " bytes)");
+//        }
 
         FileHandle previewFile = Gdx.files.local("previews/" + fontName + "-" + mode + ".png");
         if (previewFile.exists()) {
