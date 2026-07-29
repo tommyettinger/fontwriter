@@ -7,9 +7,8 @@ import com.badlogic.gdx.utils.compression.Lzma;
 import com.github.tommyettinger.textra.ColorLookup;
 import com.github.tommyettinger.textra.utils.StringUtils;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Miscellaneous pure helpers used by the main font generation
@@ -127,6 +126,34 @@ final class FontwriterUtils {
             FileHandle outLzmaFile = inFile.sibling(inFile.nameWithoutExtension() + ".json.lzma");
 
             BufferedInputStream bais = new BufferedInputStream(inFile.read());
+            OutputStream lzmaOut = outLzmaFile.write(false);
+            Lzma.compress(bais, lzmaOut);
+            lzmaOut.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * LZMA-compresses a JSON file into a sibling subdirectory, {@code truncated/}. Given
+     * {@code foo.json} this produces {@code truncated/foo.json.lzma} as a sibling.
+     * The compressed file will use lower-precision numbers, using a maximum of 6 decimal places
+     * in each JSON Number value.
+     *
+     * @param inFile the source JSON file; left untouched
+     * @throws RuntimeException wrapping any {@link IOException} raised
+     *         by the LZMA pipeline
+     */
+    public static void convertToLzmaTruncated(FileHandle inFile) {
+        try {
+            FileHandle trDir = inFile.sibling("truncated/");
+            trDir.mkdirs();
+            FileHandle outLzmaFile = inFile.sibling("truncated/" + inFile.nameWithoutExtension() + ".json.lzma");
+
+            String uncompressed = (inFile.readString("UTF-8"));
+            String truncated = uncompressed.replaceAll("(\\.\\d{6})\\d+", "$1").replaceAll("(\\.\\d+?)0+\\b", "$1");
+
+            InputStream bais = new ByteArrayInputStream(truncated.getBytes(StandardCharsets.UTF_8));
             OutputStream lzmaOut = outLzmaFile.write(false);
             Lzma.compress(bais, lzmaOut);
             lzmaOut.close();
