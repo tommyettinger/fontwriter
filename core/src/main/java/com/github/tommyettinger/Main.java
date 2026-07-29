@@ -6,7 +6,6 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.*;
-import com.github.tommyettinger.textra.utils.LZBCompression;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -242,15 +241,16 @@ public class Main extends ApplicationAdapter {
             }
         }
 
-        // [6] Compress the generated JSON into UBJ, LZMA, and LZB (.dat) companion files
+        // [6] Compress the generated JSON into UBJ and LZMA companion files
         System.out.println("Compressing .JSON file (optional)...");
         FileHandle jsonHandle = Gdx.files.local("fonts/" + fontName + "-" + mode + ".json");
         FontwriterUtils.convertToUBJSON(jsonHandle);
         FontwriterUtils.convertToLzma(jsonHandle);
         // Remove truncated mode unless we find a good usage for it.
 //        FontwriterUtils.convertToLzmaTruncated(jsonHandle);
-        ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
-        Gdx.files.local("fonts/" + fontName + "-" + mode + ".dat").writeBytes(ba.items, 0, ba.size, false);
+        // Remove .dat files; they're just too large compared to .json.lzma or .ubj.lzma files for no benefit.
+//        ByteArray ba = LZBCompression.compressToByteArray(jsonHandle.readString("UTF8"));
+//        Gdx.files.local("fonts/" + fontName + "-" + mode + ".dat").writeBytes(ba.items, 0, ba.size, false);
 
         // [7] Post-process the atlas PNG (stamp marker corner, optional color preview, palette convert)
         System.out.println("Applying changes for improved TextraTypist usage...");
@@ -292,7 +292,7 @@ public class Main extends ApplicationAdapter {
         String basePath = "fonts/";
         String ubjPath = "fonts/ubj/";
         String nameAndMode = fontName + "-" + mode;
-        String[] extensions = {".png", ".json", ".json.lzma", ".dat", ".ubj", ".ubj.lzma"};
+        String[] extensions = {".png", ".json", ".json.lzma", ".ubj", ".ubj.lzma"};
         for (String ext : extensions) {
             FileHandle f = Gdx.files.local((ext.contains("ubj") ? ubjPath : basePath) + nameAndMode + ext);
             if (f.exists()) {
