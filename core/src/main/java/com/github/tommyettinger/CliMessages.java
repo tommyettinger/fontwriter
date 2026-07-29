@@ -135,13 +135,12 @@ final class CliMessages {
         System.out.println("Output files (written to fonts/ and previews/ folders):");
         System.out.println("  fonts/<name>-<mode>.png                 Font texture atlas.");
         System.out.println("  fonts/<name>-<mode>.json                Structured JSON font descriptor.");
-        System.out.println("  fonts/<name>-<mode>.dat                 LZB-compressed descriptor (not recommended).");
         System.out.println("  fonts/<name>-<mode>.ubj                 UBJSON binary descriptor (smaller than .json).");
         System.out.println("  fonts/<name>-<mode>.json.lzma           LZMA-compressed .json descriptor (recommended).");
         System.out.println("  fonts/<name>-<mode>.ubj.lzma            LZMA-compressed .ubj descriptor (smallest).");
         System.out.println("  previews/<name>-<mode>.png (preview)    Text rendering preview (always generated).");
         System.out.println("  previews/full-<color>-<name>-<mode>.png Full-glyph color preview (only with --color).");
-        System.out.println("  You only need one descriptor file (.json, .dat, .ubj, etc.).");
+        System.out.println("  You only need one descriptor file (.json, .json.lzma, .ubj, etc.).");
         System.out.println();
 
         // --- Legacy positional syntax ---
